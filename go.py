@@ -6,12 +6,11 @@ import networkx as nx
 import collections
 from pygame import gfxdraw
 
-
 # Game constants
 BOARD_BROWN = (199, 105, 42)
-BOARD_WIDTH = 700
+BOARD_WIDTH = 1000
 BOARD_BORDER = 75
-STONE_RADIUS = 10
+STONE_RADIUS = 22
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 TURN_POS = (BOARD_BORDER, 20)
@@ -144,12 +143,12 @@ class Game:
         self.board = np.zeros((size, size))
         self.size = size
         self.black_turn = True
-        self.prisoners = collections.defaultdict(int)
         self.start_points, self.end_points = make_grid(self.size)
 
     def init_pygame(self):
+        # Inizializza la partita
         pygame.init()
-        screen = pygame.display.set_mode((BOARD_WIDTH, BOARD_WIDTH))
+        screen = pygame.display.set_mode((BOARD_WIDTH, BOARD_WIDTH), pygame.RESIZABLE)
         self.screen = screen
         self.ZOINK = pygame.mixer.Sound("wav/zoink.wav")
         self.CLICK = pygame.mixer.Sound("wav/click.wav")
@@ -190,31 +189,66 @@ class Game:
         self_color = "black" if self.black_turn else "white"
         other_color = "white" if self.black_turn else "black"
 
-        # handle captures
-        capture_happened = False
-        for group in list(get_stone_groups(self.board, other_color)):
-            if has_no_liberties(self.board, group):
-                capture_happened = True
-                for i, j in group:
-                    self.board[i, j] = 0
-                self.prisoners[self_color] += len(group)
-
-        # handle special case of invalid stone placement
-        # this must be done separately because we need to know if capture resulted
-        if not capture_happened:
-            group = None
-            for group in get_stone_groups(self.board, self_color):
-                if (col, row) in group:
-                    break
-            if has_no_liberties(self.board, group):
-                self.ZOINK.play()
-                self.board[col, row] = 0
-                return
+        # TODO : End of Game
+        self.end()
 
         # change turns and draw screen
         self.CLICK.play()
         self.black_turn = not self.black_turn
         self.draw()
+
+
+
+    def end(self):
+        # Check ends of game
+        count_r = count_c = count_d1 = count_d2 = 0
+        curr = 1.0 if self.black_turn else 2.0
+
+        for i in range(self.size):
+            for j in range(self.size):
+
+                # Orizzontale
+                if self.board[i][j] == curr:
+                    count_r += 1
+                    if count_r == 5:
+                        self.win()
+                else:
+                    count_r = 0
+
+                # Verticale
+                if self.board[j][i] == curr:
+                    count_c += 1
+                    if count_c == 5:
+                        self.win()
+                else:
+                    count_c = 0
+
+                # Diagonale 1
+                if i + 5 < self.size and j + 5 < self.size:
+                    for k in range(5):
+                        if self.board[i + k][j + k] == curr:
+                            count_d1 += 1
+                        else:
+                            count_d1 = 0
+                            break
+
+                    if count_d1 == 5:
+                        self.win()
+
+                if i + 5 < self.size and j - 5 < self.size:
+                    for k in range(5):
+                        if self.board[i + k][j - k] == curr:
+                            count_d2 += 1
+                        else:
+                            count_d2 = 0
+                            break
+
+                    if count_d2 == 5:
+                        self.win()
+
+    def win(self):
+        # TODO: Win
+        pass
 
     def draw(self):
         # draw stones - filled circle and antialiased ring
@@ -228,16 +262,9 @@ class Game:
             gfxdraw.aacircle(self.screen, x, y, STONE_RADIUS, WHITE)
             gfxdraw.filled_circle(self.screen, x, y, STONE_RADIUS, WHITE)
 
-        # text for score and turn info
-        score_msg = (
-            f"Black's Prisoners: {self.prisoners['black']}"
-            + f"     White's Prisoners: {self.prisoners['white']}"
-        )
-        txt = self.font.render(score_msg, True, BLACK)
-        self.screen.blit(txt, SCORE_POS)
         turn_msg = (
-            f"{'Black' if self.black_turn else 'White'} to move. "
-            + "Click to place stone, press P to pass."
+                f"{'Black' if self.black_turn else 'White'} to move. "
+                + "Click to place stone, press P to pass."
         )
         txt = self.font.render(turn_msg, True, BLACK)
         self.screen.blit(txt, TURN_POS)
