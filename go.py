@@ -1,3 +1,5 @@
+import random
+
 import pygame
 import numpy as np
 import itertools
@@ -8,7 +10,7 @@ from pygame import gfxdraw
 
 # Game constants
 BOARD_BROWN = (199, 105, 42)
-BOARD_WIDTH = 1000
+BOARD_WIDTH = 700
 BOARD_BORDER = 75
 STONE_RADIUS = 22
 WHITE = (255, 255, 255)
@@ -192,12 +194,14 @@ class Game:
         # TODO : End of Game
         self.end()
 
+        # Mossa del BOT
+        if (not self.critical()):
+            self.nuova_mossa(2.0);
+
         # change turns and draw screen
         self.CLICK.play()
-        self.black_turn = not self.black_turn
+        # self.black_turn = not self.black_turn
         self.draw()
-
-
 
     def end(self):
         # Check ends of game
@@ -248,7 +252,83 @@ class Game:
 
     def win(self):
         # TODO: Win
+        exit(1)
         pass
+
+    def critical(self):
+        # Check ends of game
+        count_r = count_c = count_d1 = count_d2 = 0
+        adversarial = 1.0 if self.black_turn else 2.0
+        my_color = 2.0 if self.black_turn else 1.0
+        for i in range(self.size):
+            for j in range(self.size):
+
+                # Verticale
+                if self.board[i][j] == adversarial:
+                    count_r += 1
+                    if count_r == 4:
+                        if (i < 4 and self.board[i - 4][j] == 0):
+                            self.board[i - 4][j] = my_color
+                            return True
+                        elif (self.board[i + 1][j] == 0):
+                            self.board[i + 1][j] = my_color
+                            return True
+
+                else:
+                    count_r = 0
+
+                # Orizzontale
+                if self.board[j][i] == adversarial:
+                    count_c += 1
+                    if count_c == 4:
+                        if (j > 4 and self.board[j - 4][i] == 0):
+                            self.board[j - 4][i] = my_color
+                            return True
+                        elif (j+1<self.size and self.board[j + 1][i] == 0):
+                            self.board[j + 1][i] = my_color
+                            return True
+                else:
+                    count_c = 0
+
+                # Diagonale 1
+                if i + 5 < self.size and j + 5 < self.size:
+                    for k in range(4):
+                        if self.board[i + k][j + k] == adversarial:
+                            count_d1 += 1
+                        else:
+                            count_d1 = 0
+                            break
+
+                    if count_d1 == 4:
+                        if (i > 0 and j > 0 and self.board[i - 1][j - 1] == 0):
+                            self.board[i - 1][j - 1] = my_color
+                            return True
+                        elif (i + 4 < self.size and j + 4 < self.size and self.board[i + 4][j + 4] == 0):
+                            self.board[i + 4][j + 4] = my_color
+                            return True
+
+                if i + 5 < self.size and j - 5 < self.size:
+                    for k in range(4):
+                        if self.board[i + k][j - k] == adversarial:
+                            count_d2 += 1
+                        else:
+                            count_d2 = 0
+                            break
+
+                    if count_d2 == 4:
+                        if (i > 0 and j > 0 and self.board[i - 1][j - 1] == 0):
+                            self.board[i - 1][j - 1] = my_color
+                            return True
+                        elif (i < self.size - 1 and j < self.size - 1 and self.board[i + 1][j + 1] == 0):
+                            self.board[i + 1][j + 1] = my_color
+                            return True
+        return False
+
+    def nuova_mossa(self, my_color):
+        v = random.sample(range(1, 15), 2)
+        while (not is_valid_move(v[0], v[1], self.board)):
+            v = random.sample(range(1, 15), 2)
+        self.board[v[0], v[1]] = my_color
 
     def draw(self):
         # draw stones - filled circle and antialiased ring
@@ -272,7 +352,6 @@ class Game:
         pygame.display.flip()
 
     def update(self):
-        # TODO: undo button
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.MOUSEBUTTONUP:
