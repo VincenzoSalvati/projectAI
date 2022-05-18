@@ -1,3 +1,5 @@
+import copy
+
 from TickTacToe.games import *
 
 import random
@@ -188,22 +190,53 @@ class Gomoku:
                 print(board.get((x, y), '.'), end=' ')
             print()
 
+    def extract_matrix(self, board, move):
+        x, y = move
+        list = []
+
+        start_row = x - 5 if x - 5 >= 0 else 0
+        start_col = y - 5 if y - 5 >= 0 else 0
+
+        end_row = x + 5 if x + 5 <= self.size else self.size
+        end_col = y + 5 if y + 5 <= self.size else self.size
+
+        for i in range(start_row, end_row):
+            for j in range(start_col, end_col):
+                list.append(board[i:i + 5, j:j + 5])
+
+        return list
+
+    def generation_pattern(self):
+        list = []
+        for i in range(5):
+            matrix = []
+            for ii in range(i):
+                matrix.append("-")
+            for j in range(5 - i):
+                matrix.append("x")
+            list.append(matrix)
+
+        for i in range(5):
+            matrix = copy.copy(list[0])
+            matrix[i] = "-"
+            list.append(matrix)
+
+        list.remove(list[0])
+        list.remove(list[0])
+
+        for i in range(3):
+            matrix = copy.copy(list[i])
+            matrix = matrix.reverse()
+            list.append(list(matrix))
+
     def compute_utility(self, board, move, player):
         """If 'X' wins with this move, return 1; if 'O' wins return -1; else return 0."""
-        if (self.k_in_row(board, move, player, (0, 1)) or
-                self.k_in_row(board, move, player, (1, 0)) or
-                self.k_in_row(board, move, player, (1, -1)) or
-                self.k_in_row(board, move, player, (1, 1))):
-            return +1 if player == 'X' else -1
-        else:
-            return 0
+        matrices = self.extract_matrix(board, move)
 
     def check_endgame(self, board, move, player):
         x, y = move  # coordinates of the last added stone
-
         row_start = x - 5 if x - 5 > 0 else 0
         col_start = y - 5 if y - 5 > 0 else 0
-
         # Horizontal
         count_stones = 0
         for k in range(2 * 5 - 1):
