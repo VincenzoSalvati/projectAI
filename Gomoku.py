@@ -336,7 +336,6 @@ class Gomoku:
                     if count_d2 == 5:
                         self.win()
 
-        return n >= self.k
 
     def init_pygame(self):
         # Inizializza la partita
