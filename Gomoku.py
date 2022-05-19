@@ -206,6 +206,50 @@ class Gomoku:
 
         return list
 
+    def extract_arrays(self, board, move):
+
+        x, y = move
+        list = []
+
+        start_row = x - 5 if x - 5 >= 0 else 0
+        start_col = y - 5 if y - 5 >= 0 else 0
+
+        end_row = x + 5 if x + 5 <= self.size else self.size
+        end_col = y + 5 if y + 5 <= self.size else self.size
+
+
+        spazi_prima_colonne = 5 if y-5 >=0 else y
+        spazi_dopo_colonne = 5 if y+5 <= self.size else self.size-y
+
+
+        if spazi_prima_colonne == spazi_dopo_colonne == 5:
+            for i in range(6):
+                # Horizontal
+                list.append(board[x, y - i:y + 5 - i])
+        elif spazi_prima_colonne != 5:
+            for i in range(spazi_prima_colonne):
+                list.append(board[x, y - i:y + 5 - i])
+        else:
+            for i in range(spazi_dopo_colonne):
+                list.append(board[x, y - 5 + i: y + i])
+        #
+        # transpose_board = np.transpose(board)
+        # for i in range(spazi_prima_colonne):
+        #     # Horizontal
+        #     list.append(board[x, y-i:y+5-i])
+
+        # for i in range(end_row - start_row):
+        #     # Vertical
+        #     list.append(board[start_row + i:end_row - i, y])
+        #
+        # for i in range(min(end_col - start_col, end_row - start_row)):
+        #     # Diag1
+        #     list.append(np.diag(board[start_row + i:end_row - i, start_col + i:end_col - i]))
+        #     # Diag2
+        #     list.append(np.diag(transpose_board[start_row + i:end_row - i, start_col + i:end_col - i]))
+
+        return list
+
     def generation_pattern(self):
         list = []
         for i in range(5):
@@ -217,338 +261,320 @@ class Gomoku:
             list.append(matrix)
 
         for i in range(5):
-            matrix = []
-            for ii in range(i):
-                matrix.append("x")
-            for j in range(5 - i):
-                matrix.append("-")
-            list.append(matrix)
-
-        for i in range(5):
             matrix = copy.copy(list[0])
             matrix[i] = "-"
             list.append(matrix)
 
         list.remove(list[0])
         list.remove(list[0])
-        list.remove(list[3])
-        list.remove(list[6])
 
-        for pattern in list:
-            pattern.insert(0, "any")
-            pattern.append("any")
+        for i in range(3):
+            matrix = copy.copy(list[i])
+            matrix = matrix.reverse()
+            list.append(list(matrix))
 
-        for index in range(len(list)):
-            if index == 6:
-                matrix = copy.copy(list[index])
-                matrix[1] = "y"
-                list.append(matrix)
-                matrix = copy.copy(list[index])
-                matrix[6] = "y"
-                list.append(matrix)
-            elif index == 10:
-                matrix = copy.copy(list[index])
-                matrix[0] = "y"
-                list.append(matrix)
-                matrix = copy.copy(list[index])
-                matrix[5] = "y"
-                list.append(matrix)
+    def compute_utility(self, board, move, player):
+        """If 'X' wins with this move, return 1; if 'O' wins return -1; else return 0."""
+        matrices = self.extract_matrix(board, move)
+        arrays = self.extract_arrays(board, move)
+        print("CIAO")
 
-
-def compute_utility(self, board, move, player):
-    """If 'X' wins with this move, return 1; if 'O' wins return -1; else return 0."""
-    matrices = self.extract_matrix(board, move)
-
-
-def check_endgame(self, board, move, player):
-    x, y = move  # coordinates of the last added stone
-    row_start = x - 5 if x - 5 > 0 else 0
-    col_start = y - 5 if y - 5 > 0 else 0
-    # Horizontal
-    count_stones = 0
-    for k in range(2 * 5 - 1):
-        if board[x][y + k] == player:
-            count_stones += 1
-        else:
-            count_stones = 0
-
-
-def k_in_row(self, board, move, player, delta_x_y):
-    # Check ends of game
-    count_r = count_c = count_d1 = count_d2 = 0
-    for i in range(self.size):
-        for j in range(self.size):
-
-            # Orizzontale
-            if board[i][j] == player:
-                count_r += 1
-                if count_r == 5:
-                    self.win()
+    def check_endgame(self, board, move, player):
+        x, y = move  # coordinates of the last added stone
+        row_start = x - 5 if x - 5 > 0 else 0
+        col_start = y - 5 if y - 5 > 0 else 0
+        # Horizontal
+        count_stones = 0
+        for k in range(2 * 5 - 1):
+            if board[x][y + k] == player:
+                count_stones += 1
             else:
-                count_r = 0
+                count_stones = 0
 
-            # Verticale
-            if board[j][i] == player:
-                count_c += 1
-                if count_c == 5:
-                    self.win()
+    def k_in_row(self, board, move, player, delta_x_y):
+        # Check ends of game
+        count_r = count_c = count_d1 = count_d2 = 0
+        for i in range(self.size):
+            for j in range(self.size):
+
+                # Orizzontale
+                if board[i][j] == player:
+                    count_r += 1
+                    if count_r == 5:
+                        self.win()
+                else:
+                    count_r = 0
+
+                # Verticale
+                if board[j][i] == player:
+                    count_c += 1
+                    if count_c == 5:
+                        self.win()
+                else:
+                    count_c = 0
+
+                # Diagonale 1
+                if i + 5 < self.size and j + 5 < self.size:
+                    for k in range(5):
+                        if board[i + k][j + k] == player:
+                            count_d1 += 1
+                        else:
+                            count_d1 = 0
+                            break
+
+                    if count_d1 == 5:
+                        self.win()
+
+                if i + 5 < self.size and j - 5 < self.size:
+                    for k in range(5):
+                        if board[i + k][j - k] == player:
+                            count_d2 += 1
+                        else:
+                            count_d2 = 0
+                            break
+
+                    if count_d2 == 5:
+                        self.win()
+
+        return n >= self.k
+
+    def init_pygame(self):
+        # Inizializza la partita
+        pygame.init()
+        screen = pygame.display.set_mode((BOARD_WIDTH, BOARD_WIDTH), pygame.RESIZABLE)
+        self.screen = screen
+        self.ZOINK = pygame.mixer.Sound("wav/zoink.wav")
+        self.CLICK = pygame.mixer.Sound("wav/click.wav")
+        self.font = pygame.font.SysFont("arial", 30)
+
+    def clear_screen(self):
+
+        # fill board and add gridlines
+        self.screen.fill(BOARD_BROWN)
+        for start_point, end_point in zip(self.start_points, self.end_points):
+            pygame.draw.line(self.screen, BLACK, start_point, end_point)
+
+        # add guide dots
+        guide_dots = [3, self.size // 2, self.size - 4]
+        for col, row in itertools.product(guide_dots, guide_dots):
+            x, y = colrow_to_xy(col, row, self.size)
+            gfxdraw.aacircle(self.screen, x, y, DOT_RADIUS, BLACK)
+            gfxdraw.filled_circle(self.screen, x, y, DOT_RADIUS, BLACK)
+
+        pygame.display.flip()
+
+    def pass_move(self):
+        self.black_turn = not self.black_turn
+        self.draw()
+
+    def to_move(self, state):
+        return PLAYER_WHITE
+    def handle_click(self):
+        # get board position
+        x, y = pygame.mouse.get_pos()
+        col, row = xy_to_colrow(x, y, self.size)
+        if not is_valid_move(col, row, self.board):
+            self.ZOINK.play()
+            return
+
+        # update board array
+        self.board[col, row] = 1 if self.black_turn else 2
+
+        # get stone groups for black and white
+        self_color = "black" if self.black_turn else "white"
+        other_color = "white" if self.black_turn else "black"
+
+        # TODO : End of Game
+        self.end()
+
+        def filtering(position):
+            x, y = position
+            if self.board[x-1][y-1] == 0:
+                return True
             else:
-                count_c = 0
+                return False
 
-            # Diagonale 1
-            if i + 5 < self.size and j + 5 < self.size:
-                for k in range(5):
-                    if board[i + k][j + k] == player:
-                        count_d1 += 1
-                    else:
-                        count_d1 = 0
-                        break
+        # Mossa del BOT
+        global game
+        state = GameState(to_move=PLAYER_BLACK,
+                          utility=0,
+                          board=self.board,
+                          moves=set(filter(filtering, [(x, y)
+                                                       for x in range(1, self.size + 1)
+                                                       for y in range(1, self.size + 1)])))
+        a, b = alpha_beta_player(game, state)
 
-                if count_d1 == 5:
-                    self.win()
+        # change turns and draw screen
+        self.CLICK.play()
+        # self.black_turn = not self.black_turn
+        self.draw()
 
-            if i + 5 < self.size and j - 5 < self.size:
-                for k in range(5):
-                    if board[i + k][j - k] == player:
-                        count_d2 += 1
-                    else:
-                        count_d2 = 0
-                        break
+    def end(self):
+        # Check ends of game
+        count_r = count_c = count_d1 = count_d2 = 0
+        curr = 1.0 if self.black_turn else 2.0
 
-                if count_d2 == 5:
-                    self.win()
+        for i in range(self.size):
+            for j in range(self.size):
 
+                # Orizzontale
+                if self.board[i][j] == curr:
+                    count_r += 1
+                    if count_r == 5:
+                        self.win()
+                else:
+                    count_r = 0
 
-def init_pygame(self):
-    # Inizializza la partita
-    pygame.init()
-    screen = pygame.display.set_mode((BOARD_WIDTH, BOARD_WIDTH), pygame.RESIZABLE)
-    self.screen = screen
-    self.ZOINK = pygame.mixer.Sound("wav/zoink.wav")
-    self.CLICK = pygame.mixer.Sound("wav/click.wav")
-    self.font = pygame.font.SysFont("arial", 30)
+                # Verticale
+                if self.board[j][i] == curr:
+                    count_c += 1
+                    if count_c == 5:
+                        self.win()
+                else:
+                    count_c = 0
 
+                # Diagonale 1
+                if i + 5 < self.size and j + 5 < self.size:
+                    for k in range(5):
+                        if self.board[i + k][j + k] == curr:
+                            count_d1 += 1
+                        else:
+                            count_d1 = 0
+                            break
 
-def clear_screen(self):
-    # fill board and add gridlines
-    self.screen.fill(BOARD_BROWN)
-    for start_point, end_point in zip(self.start_points, self.end_points):
-        pygame.draw.line(self.screen, BLACK, start_point, end_point)
+                    if count_d1 == 5:
+                        self.win()
 
-    # add guide dots
-    guide_dots = [3, self.size // 2, self.size - 4]
-    for col, row in itertools.product(guide_dots, guide_dots):
-        x, y = colrow_to_xy(col, row, self.size)
-        gfxdraw.aacircle(self.screen, x, y, DOT_RADIUS, BLACK)
-        gfxdraw.filled_circle(self.screen, x, y, DOT_RADIUS, BLACK)
+                if i + 5 < self.size and j - 5 < self.size:
+                    for k in range(5):
+                        if self.board[i + k][j - k] == curr:
+                            count_d2 += 1
+                        else:
+                            count_d2 = 0
+                            break
 
-    pygame.display.flip()
+                    if count_d2 == 5:
+                        self.win()
 
+    def win(self):
+        # TODO: Win
+        exit(1)
+        pass
 
-def pass_move(self):
-    self.black_turn = not self.black_turn
-    self.draw()
+    def critical(self):
+        # Check ends of game
+        count_r = count_c = count_d1 = count_d2 = 0
+        adversarial = 1.0 if self.black_turn else 2.0
+        my_color = 2.0 if self.black_turn else 1.0
+        for i in range(self.size):
+            for j in range(self.size):
 
+                # Verticale
+                if self.board[i][j] == adversarial:
+                    count_r += 1
+                    if count_r == 4:
+                        if (i < 4 and self.board[i - 4][j] == 0):
+                            self.board[i - 4][j] = my_color
+                            return True
+                        elif (self.board[i + 1][j] == 0):
+                            self.board[i + 1][j] = my_color
+                            return True
 
-def handle_click(self):
-    # get board position
-    x, y = pygame.mouse.get_pos()
-    col, row = xy_to_colrow(x, y, self.size)
-    if not is_valid_move(col, row, self.board):
-        self.ZOINK.play()
-        return
+                else:
+                    count_r = 0
 
-    # update board array
-    self.board[col, row] = 1 if self.black_turn else 2
+                # Orizzontale
+                if self.board[j][i] == adversarial:
+                    count_c += 1
+                    if count_c == 4:
+                        if (j > 4 and self.board[j - 4][i] == 0):
+                            self.board[j - 4][i] = my_color
+                            return True
+                        elif (j + 1 < self.size and self.board[j + 1][i] == 0):
+                            self.board[j + 1][i] = my_color
+                            return True
+                else:
+                    count_c = 0
 
-    # get stone groups for black and white
-    self_color = "black" if self.black_turn else "white"
-    other_color = "white" if self.black_turn else "black"
+                # Diagonale 1
+                if i + 5 < self.size and j + 5 < self.size:
+                    for k in range(4):
+                        if self.board[i + k][j + k] == adversarial:
+                            count_d1 += 1
+                        else:
+                            count_d1 = 0
+                            break
 
-    # TODO : End of Game
-    self.end()
+                    if count_d1 == 4:
+                        if (i > 0 and j > 0 and self.board[i - 1][j - 1] == 0):
+                            self.board[i - 1][j - 1] = my_color
+                            return True
+                        elif (i + 4 < self.size and j + 4 < self.size and self.board[i + 4][j + 4] == 0):
+                            self.board[i + 4][j + 4] = my_color
+                            return True
 
-    # Mossa del BOT
-    if (not self.critical()):
-        self.nuova_mossa(2.0);
+                if i + 5 < self.size and j - 5 < self.size:
+                    for k in range(4):
+                        if self.board[i + k][j - k] == adversarial:
+                            count_d2 += 1
+                        else:
+                            count_d2 = 0
+                            break
 
-    # change turns and draw screen
-    self.CLICK.play()
-    # self.black_turn = not self.black_turn
-    self.draw()
+                    if count_d2 == 4:
+                        if (i > 0 and j > 0 and self.board[i - 1][j - 1] == 0):
+                            self.board[i - 1][j - 1] = my_color
+                            return True
+                        elif (i < self.size - 1 and j < self.size - 1 and self.board[i + 1][j + 1] == 0):
+                            self.board[i + 1][j + 1] = my_color
+                            return True
+        return False
 
-
-def end(self):
-    # Check ends of game
-    count_r = count_c = count_d1 = count_d2 = 0
-    curr = 1.0 if self.black_turn else 2.0
-
-    for i in range(self.size):
-        for j in range(self.size):
-
-            # Orizzontale
-            if self.board[i][j] == curr:
-                count_r += 1
-                if count_r == 5:
-                    self.win()
-            else:
-                count_r = 0
-
-            # Verticale
-            if self.board[j][i] == curr:
-                count_c += 1
-                if count_c == 5:
-                    self.win()
-            else:
-                count_c = 0
-
-            # Diagonale 1
-            if i + 5 < self.size and j + 5 < self.size:
-                for k in range(5):
-                    if self.board[i + k][j + k] == curr:
-                        count_d1 += 1
-                    else:
-                        count_d1 = 0
-                        break
-
-                if count_d1 == 5:
-                    self.win()
-
-            if i + 5 < self.size and j - 5 < self.size:
-                for k in range(5):
-                    if self.board[i + k][j - k] == curr:
-                        count_d2 += 1
-                    else:
-                        count_d2 = 0
-                        break
-
-                if count_d2 == 5:
-                    self.win()
-
-
-def win(self):
-    # TODO: Win
-    exit(1)
-    pass
-
-
-def critical(self):
-    # Check ends of game
-    count_r = count_c = count_d1 = count_d2 = 0
-    adversarial = 1.0 if self.black_turn else 2.0
-    my_color = 2.0 if self.black_turn else 1.0
-    for i in range(self.size):
-        for j in range(self.size):
-
-            # Verticale
-            if self.board[i][j] == adversarial:
-                count_r += 1
-                if count_r == 4:
-                    if (i < 4 and self.board[i - 4][j] == 0):
-                        self.board[i - 4][j] = my_color
-                        return True
-                    elif (self.board[i + 1][j] == 0):
-                        self.board[i + 1][j] = my_color
-                        return True
-
-            else:
-                count_r = 0
-
-            # Orizzontale
-            if self.board[j][i] == adversarial:
-                count_c += 1
-                if count_c == 4:
-                    if (j > 4 and self.board[j - 4][i] == 0):
-                        self.board[j - 4][i] = my_color
-                        return True
-                    elif (j + 1 < self.size and self.board[j + 1][i] == 0):
-                        self.board[j + 1][i] = my_color
-                        return True
-            else:
-                count_c = 0
-
-            # Diagonale 1
-            if i + 5 < self.size and j + 5 < self.size:
-                for k in range(4):
-                    if self.board[i + k][j + k] == adversarial:
-                        count_d1 += 1
-                    else:
-                        count_d1 = 0
-                        break
-
-                if count_d1 == 4:
-                    if (i > 0 and j > 0 and self.board[i - 1][j - 1] == 0):
-                        self.board[i - 1][j - 1] = my_color
-                        return True
-                    elif (i + 4 < self.size and j + 4 < self.size and self.board[i + 4][j + 4] == 0):
-                        self.board[i + 4][j + 4] = my_color
-                        return True
-
-            if i + 5 < self.size and j - 5 < self.size:
-                for k in range(4):
-                    if self.board[i + k][j - k] == adversarial:
-                        count_d2 += 1
-                    else:
-                        count_d2 = 0
-                        break
-
-                if count_d2 == 4:
-                    if (i > 0 and j > 0 and self.board[i - 1][j - 1] == 0):
-                        self.board[i - 1][j - 1] = my_color
-                        return True
-                    elif (i < self.size - 1 and j < self.size - 1 and self.board[i + 1][j + 1] == 0):
-                        self.board[i + 1][j + 1] = my_color
-                        return True
-    return False
-
-
-def nuova_mossa(self, my_color):
-    v = random.sample(range(1, 15), 2)
-    while (not is_valid_move(v[0], v[1], self.board)):
+    def nuova_mossa(self, my_color):
         v = random.sample(range(1, 15), 2)
-    self.board[v[0], v[1]] = my_color
+        while (not is_valid_move(v[0], v[1], self.board)):
+            v = random.sample(range(1, 15), 2)
+        self.board[v[0], v[1]] = my_color
 
+    def draw(self):
+        # draw stones - filled circle and antialiased ring
+        self.clear_screen()
+        for col, row in zip(*np.where(self.board == 1)):
+            x, y = colrow_to_xy(col, row, self.size)
+            gfxdraw.aacircle(self.screen, x, y, STONE_RADIUS, BLACK)
+            gfxdraw.filled_circle(self.screen, x, y, STONE_RADIUS, BLACK)
+        for col, row in zip(*np.where(self.board == 2)):
+            x, y = colrow_to_xy(col, row, self.size)
+            gfxdraw.aacircle(self.screen, x, y, STONE_RADIUS, WHITE)
+            gfxdraw.filled_circle(self.screen, x, y, STONE_RADIUS, WHITE)
 
-def draw(self):
-    # draw stones - filled circle and antialiased ring
-    self.clear_screen()
-    for col, row in zip(*np.where(self.board == 1)):
-        x, y = colrow_to_xy(col, row, self.size)
-        gfxdraw.aacircle(self.screen, x, y, STONE_RADIUS, BLACK)
-        gfxdraw.filled_circle(self.screen, x, y, STONE_RADIUS, BLACK)
-    for col, row in zip(*np.where(self.board == 2)):
-        x, y = colrow_to_xy(col, row, self.size)
-        gfxdraw.aacircle(self.screen, x, y, STONE_RADIUS, WHITE)
-        gfxdraw.filled_circle(self.screen, x, y, STONE_RADIUS, WHITE)
+        turn_msg = (
+                f"{'Black' if self.black_turn else 'White'} to move. "
+                + "Click to place stone, press P to pass."
+        )
+        txt = self.font.render(turn_msg, True, BLACK)
+        self.screen.blit(txt, TURN_POS)
 
-    turn_msg = (
-            f"{'Black' if self.black_turn else 'White'} to move. "
-            + "Click to place stone, press P to pass."
-    )
-    txt = self.font.render(turn_msg, True, BLACK)
-    self.screen.blit(txt, TURN_POS)
+        pygame.display.flip()
 
-    pygame.display.flip()
-
-
-def update(self):
-    events = pygame.event.get()
-    for event in events:
-        if event.type == pygame.MOUSEBUTTONUP:
-            self.handle_click()
-        if event.type == pygame.QUIT:
-            sys.exit()
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_p:
-                self.pass_move()
+    def update(self):
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.handle_click()
+            if event.type == pygame.QUIT:
+                sys.exit()
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_p:
+                    self.pass_move()
 
 
 if __name__ == "__main__":
-    g = Game(size=15)
-    g.init_pygame()
-    g.clear_screen()
-    g.draw()
+    game = Gomoku(15)
+    game.init_pygame()
+    game.clear_screen()
+    game.draw()
 
     while True:
-        g.update()
+        game.update()
         pygame.time.wait(100)
