@@ -208,7 +208,7 @@ class Gomoku:
 
         return list
 
-    def extract_arrays(self, board, move):
+    def extract_arrays_old(self, board, move):
 
         x, y = move
         list = []
@@ -253,6 +253,31 @@ class Gomoku:
         #     list.append(np.diag(transpose_board[start_row + i:end_row - i, start_col + i:end_col - i]))
 
         return list
+
+    def extract_arrays(self, board):
+        l=[]
+        transpose_board = np.transpose(board)
+        for i in range(self.size):
+            for j in range(self.size - self.k + 1):
+                l.append(board[i, j:j + self.k])
+                l.append(transpose_board[i, j:j + self.k])
+                if (i + self.k <= self.size):
+                    l.append(np.diag(board[i:i + self.k, j:j + self.k]))
+                    l.append(np.diag(transpose_board[j:j + self.k, j:j + self.k]))
+
+        l.append(np.diag(board[:self.k - 1, self.size - self.k + 1:]))
+        l.append(np.diag(transpose_board[:self.k, self.size - self.k + 1:]))
+        l.append(np.diag(board[:self.k - 1, self.size - self.k + 2:]))
+        l.append(np.diag(transpose_board[:self.k - 1, self.size - self.k + 2:]))
+
+        flipped = np.flip(board, 0)
+        flipped_transposed = np.transpose(flipped)
+        l.append(np.diag(flipped[:self.k - 1, self.size - self.k + 1:]))
+        l.append(np.diag(flipped_transposed[:self.k, self.size - self.k + 1:]))
+        l.append(np.diag(flipped[:self.k - 1, self.size - self.k + 2:]))
+        l.append(np.diag(flipped_transposed[:self.k - 1, self.size - self.k + 2:]))
+
+        print(len(l))
 
     def generation_pattern(self):
         list = []
