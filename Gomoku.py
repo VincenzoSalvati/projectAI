@@ -206,6 +206,50 @@ class Gomoku:
 
         return list
 
+    def extract_arrays(self, board, move):
+
+        x, y = move
+        list = []
+
+        start_row = x - 5 if x - 5 >= 0 else 0
+        start_col = y - 5 if y - 5 >= 0 else 0
+
+        end_row = x + 5 if x + 5 <= self.size else self.size
+        end_col = y + 5 if y + 5 <= self.size else self.size
+
+
+        spazi_prima_colonne = 5 if y-5 >=0 else y
+        spazi_dopo_colonne = 5 if y+5 <= self.size else self.size-y
+
+
+        if spazi_prima_colonne == spazi_dopo_colonne == 5:
+            for i in range(6):
+                # Horizontal
+                list.append(board[x, y - i:y + 5 - i])
+        elif spazi_prima_colonne != 5:
+            for i in range(spazi_prima_colonne):
+                list.append(board[x, y - i:y + 5 - i])
+        else:
+            for i in range(spazi_dopo_colonne):
+                list.append(board[x, y - 5 + i: y + i])
+        #
+        # transpose_board = np.transpose(board)
+        # for i in range(spazi_prima_colonne):
+        #     # Horizontal
+        #     list.append(board[x, y-i:y+5-i])
+
+        # for i in range(end_row - start_row):
+        #     # Vertical
+        #     list.append(board[start_row + i:end_row - i, y])
+        #
+        # for i in range(min(end_col - start_col, end_row - start_row)):
+        #     # Diag1
+        #     list.append(np.diag(board[start_row + i:end_row - i, start_col + i:end_col - i]))
+        #     # Diag2
+        #     list.append(np.diag(transpose_board[start_row + i:end_row - i, start_col + i:end_col - i]))
+
+        return list
+
     def generation_pattern(self):
         list = []
         for i in range(5):
@@ -232,6 +276,8 @@ class Gomoku:
     def compute_utility(self, board, move, player):
         """If 'X' wins with this move, return 1; if 'O' wins return -1; else return 0."""
         matrices = self.extract_matrix(board, move)
+        arrays = self.extract_arrays(board, move)
+        print("CIAO")
 
     def check_endgame(self, board, move, player):
         x, y = move  # coordinates of the last added stone
@@ -321,6 +367,8 @@ class Gomoku:
         self.black_turn = not self.black_turn
         self.draw()
 
+    def to_move(self, state):
+        return PLAYER_WHITE
     def handle_click(self):
         # get board position
         x, y = pygame.mouse.get_pos()
@@ -339,9 +387,22 @@ class Gomoku:
         # TODO : End of Game
         self.end()
 
+        def filtering(position):
+            x, y = position
+            if self.board[x-1][y-1] == 0:
+                return True
+            else:
+                return False
+
         # Mossa del BOT
-        if (not self.critical()):
-            self.nuova_mossa(2.0);
+        global game
+        state = GameState(to_move=PLAYER_BLACK,
+                          utility=0,
+                          board=self.board,
+                          moves=set(filter(filtering, [(x, y)
+                                                       for x in range(1, self.size + 1)
+                                                       for y in range(1, self.size + 1)])))
+        a, b = alpha_beta_player(game, state)
 
         # change turns and draw screen
         self.CLICK.play()
@@ -509,11 +570,11 @@ class Gomoku:
 
 
 if __name__ == "__main__":
-    g = Game(size=15)
-    g.init_pygame()
-    g.clear_screen()
-    g.draw()
+    game = Gomoku(15)
+    game.init_pygame()
+    game.clear_screen()
+    game.draw()
 
     while True:
-        g.update()
+        game.update()
         pygame.time.wait(100)
