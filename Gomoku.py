@@ -1,6 +1,7 @@
 import copy
+from collections import namedtuple
 
-from TickTacToe.games import *
+from TickTacToe.games import alpha_beta_player,alpha_beta_search
 
 import random
 import pygame
@@ -24,7 +25,7 @@ DOT_RADIUS = 4
 PLAYER_BLACK = 1
 PLAYER_WHITE = 2
 
-
+GameState = namedtuple('GameState', 'to_move, utility, board, moves, branching')
 def make_grid(size):
     """Return list of (start_point, end_point pairs) defining gridlines
     Args:
@@ -149,15 +150,15 @@ class Gomoku:
     def __init__(self, size, k=5):
 
         self.k = k
-        moves = [(x, y) for x in range(1, size + 1)
-                 for y in range(1, size + 1)]
+        moves = [(x, y) for x in range(size)
+                 for y in range(size)]
 
         self.board = np.zeros((size, size))
         self.size = size
         self.black_turn = True
         self.start_points, self.end_points = make_grid(self.size)
 
-        self.initial = GameState(to_move=PLAYER_BLACK, utility=0, board=self.board, moves=moves)
+        self.initial = GameState(to_move=PLAYER_BLACK, utility=0, board=self.board, moves=moves, branching=3)
 
     def actions(self, state):
         """Legal moves are any square not yet taken."""
@@ -173,7 +174,8 @@ class Gomoku:
         return GameState(to_move=(PLAYER_WHITE if state.to_move == PLAYER_BLACK else PLAYER_BLACK),
                          utility=self.compute_utility(board, move, state.to_move),
                          board=board,
-                         moves=moves)
+                         moves=moves,
+                         branching=state.branching-1)
 
     def utility(self, state, player):
         """Return the value to player; 1 for win, -1 for loss, 0 otherwise."""
@@ -181,7 +183,7 @@ class Gomoku:
 
     def terminal_test(self, state):
         """A state is terminal if it is won or there are no empty squares."""
-        return state.utility != 0 or len(state.moves) == 0
+        return state.utility != 0 or len(state.moves) == 0 or state.branching == 0
 
     def display(self, state):
         board = state.board
@@ -220,18 +222,20 @@ class Gomoku:
 
         spazi_prima_colonne = 5 if y-5 >=0 else y
         spazi_dopo_colonne = 5 if y+5 <= self.size else self.size-y
-
+        transpose_board = np.transpose(board)
 
         if spazi_prima_colonne == spazi_dopo_colonne == 5:
-            for i in range(6):
+            for i in range(5):
                 # Horizontal
                 list.append(board[x, y - i:y + 5 - i])
         elif spazi_prima_colonne != 5:
-            for i in range(spazi_prima_colonne):
+            for i in range(spazi_prima_colonne + 1):
                 list.append(board[x, y - i:y + 5 - i])
         else:
             for i in range(spazi_dopo_colonne):
-                list.append(board[x, y - 5 + i: y + i])
+                list.append(board[x, y - 4 + i:y + i + 1])
+
+
         #
         # transpose_board = np.transpose(board)
         # for i in range(spazi_prima_colonne):
@@ -277,7 +281,21 @@ class Gomoku:
         """If 'X' wins with this move, return 1; if 'O' wins return -1; else return 0."""
         matrices = self.extract_matrix(board, move)
         arrays = self.extract_arrays(board, move)
-        print("CIAO")
+
+
+        patterns = [
+            (np.array([player, player, player, player, player]), 100),
+            (np.array([player, player, player, player, 0]), 90),
+            (np.array([0, player, player, player, player]), 90),
+            (np.array([player, 0, player, player, player]), 90),
+            (np.array([player, player, player, 0, player]), 90),
+            (np.array([player, player, 0, player, player]), 90)
+                    ]
+        for a in arrays:
+            for p in patterns:
+                if np.array_equal(a, p[0]):
+                    return p[1]
+        return 0
 
     def check_endgame(self, board, move, player):
         x, y = move  # coordinates of the last added stone
@@ -368,6 +386,7 @@ class Gomoku:
 
     def to_move(self, state):
         return PLAYER_WHITE
+
     def handle_click(self):
         # get board position
         x, y = pygame.mouse.get_pos()
@@ -377,7 +396,7 @@ class Gomoku:
             return
 
         # update board array
-        self.board[col, row] = 1 if self.black_turn else 2
+        self.board[col, row] = PLAYER_BLACK if self.black_turn else PLAYER_WHITE
 
         # get stone groups for black and white
         self_color = "black" if self.black_turn else "white"
@@ -388,21 +407,23 @@ class Gomoku:
 
         def filtering(position):
             x, y = position
-            if self.board[x-1][y-1] == 0:
+            if self.board[x][y] == 0:
                 return True
             else:
                 return False
 
         # Mossa del BOT
         global game
-        state = GameState(to_move=PLAYER_BLACK,
+        state = GameState(to_move=PLAYER_WHITE if self.black_turn else PLAYER_BLACK,
                           utility=0,
                           board=self.board,
                           moves=set(filter(filtering, [(x, y)
-                                                       for x in range(1, self.size + 1)
-                                                       for y in range(1, self.size + 1)])))
+                                                       for x in range(self.size)
+                                                       for y in range(self.size)])),
+                          branching=3
+                          )
         a, b = alpha_beta_player(game, state)
-
+        self.board[a, b] = PLAYER_WHITE if self.black_turn else PLAYER_BLACK
         # change turns and draw screen
         self.CLICK.play()
         # self.black_turn = not self.black_turn
