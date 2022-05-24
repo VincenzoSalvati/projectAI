@@ -1,21 +1,19 @@
-import copy
-from collections import namedtuple
-
-from TickTacToe.games import alpha_beta_player, alpha_beta_search
-
-import random
-import pygame
-import numpy as np
 import itertools
 import sys
+from collections import namedtuple
+
 import networkx as nx
+import numpy as np
+import pygame
 from pygame import gfxdraw
+
+from TickTacToe.games import alpha_beta_player
 
 # Game constants
 BOARD_BROWN = (199, 105, 42)
 BOARD_WIDTH = 700
 BOARD_BORDER = 75
-STONE_RADIUS = 22
+STONE_RADIUS = 14
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 TURN_POS = (BOARD_BORDER, 20)
@@ -92,6 +90,24 @@ def colrow_to_xy(col, row, size):
     return x, y
 
 
+def is_valid_move(col, row, board):
+    """Check if placing a stone at (col, row) is valid on board
+    Args:
+        col (int): column number
+        row (int): row number
+        board (object): board grid (size * size matrix)
+    Returns:
+        boolean: True if move is valid, False otherewise
+    """
+    # TODO: check for ko situation (infinite back and forth)
+    if col < 0 or col >= board.shape[0]:
+        return False
+    if row < 0 or row >= board.shape[0]:
+        return False
+    return board[col, row] == 0
+
+
+# Actualy not used
 def has_no_liberties(board, group):
     """Check if a stone group has any liberties on a given board.
     Args:
@@ -112,6 +128,7 @@ def has_no_liberties(board, group):
     return True
 
 
+# Actualy not used
 def get_stone_groups(board, color):
     """Get stone groups of a given color on a given board
     Args:
@@ -131,23 +148,6 @@ def get_stone_groups(board, color):
     return nx.connected_components(graph)
 
 
-def is_valid_move(col, row, board):
-    """Check if placing a stone at (col, row) is valid on board
-    Args:
-        col (int): column number
-        row (int): row number
-        board (object): board grid (size * size matrix)
-    Returns:
-        boolean: True if move is valid, False otherewise
-    """
-    # TODO: check for ko situation (infinite back and forth)
-    if col < 0 or col >= board.shape[0]:
-        return False
-    if row < 0 or row >= board.shape[0]:
-        return False
-    return board[col, row] == 0
-
-
 class Gomoku:
     def __init__(self, size, k=5):
 
@@ -161,6 +161,15 @@ class Gomoku:
         self.start_points, self.end_points = make_grid(self.size)
 
         self.initial = GameState(to_move=PLAYER_BLACK, utility=0, board=self.board, moves=moves, branching=3)
+
+    def init_pygame(self):
+        # Inizializza la partita
+        pygame.init()
+        screen = pygame.display.set_mode((BOARD_WIDTH, BOARD_WIDTH), pygame.RESIZABLE)
+        self.screen = screen
+        self.ZOINK = pygame.mixer.Sound("wav/zoink.wav")
+        self.CLICK = pygame.mixer.Sound("wav/click.wav")
+        self.font = pygame.font.SysFont("arial", 30)
 
     def actions(self, state):
         """Legal moves are any square not yet taken."""
@@ -195,24 +204,39 @@ class Gomoku:
                 print(board.get((x, y), '.'), end=' ')
             print()
 
-    def extract_matrix(self, board, move):
-        x, y = move
-        list = []
+    def draw(self):
+        # draw stones - filled circle and antialiased ring
+        self.clear_screen()
+        for col, row in zip(*np.where(self.board == 1)):
+            x, y = colrow_to_xy(col, row, self.size)
+            gfxdraw.aacircle(self.screen, x, y, STONE_RADIUS, BLACK)
+            gfxdraw.filled_circle(self.screen, x, y, STONE_RADIUS, BLACK)
+        for col, row in zip(*np.where(self.board == 2)):
+            x, y = colrow_to_xy(col, row, self.size)
+            gfxdraw.aacircle(self.screen, x, y, STONE_RADIUS, WHITE)
+            gfxdraw.filled_circle(self.screen, x, y, STONE_RADIUS, WHITE)
 
-        start_row = x - 5 if x - 5 >= 0 else 0
-        start_col = y - 5 if y - 5 >= 0 else 0
+        turn_msg = (
+                f"{'Black' if self.black_turn else 'White'} to move. "
+                + "Click to place stone, press P to pass."
+        )
+        txt = self.font.render(turn_msg, True, BLACK)
+        self.screen.blit(txt, TURN_POS)
 
-        end_row = x + 5 if x + 5 <= self.size else self.size
-        end_col = y + 5 if y + 5 <= self.size else self.size
+        pygame.display.flip()
 
-        for i in range(start_row, end_row):
-            for j in range(start_col, end_col):
-                list.append(board[i:i + 5, j:j + 5])
-
-        return list
+    def update(self):
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.handle_click()
+            if event.type == pygame.QUIT:
+                sys.exit()
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_p:
+                    self.pass_move()
 
     def extract_arrays(self, board):
-
         diag = []
         transpose_board = np.transpose(board)
         flipped_board = np.flip(board, 1)
@@ -223,7 +247,7 @@ class Gomoku:
 
         # Extract all diagonals
         for j in range(self.size - self.k + 1):
-            if (j + self.k <= self.size):
+            if j + self.k <= self.size:
                 diag.append(np.diag(board[0:, j:]))
                 diag.append(np.diag(flipped_board[0:, j:]))
                 if j != 0:
@@ -232,398 +256,73 @@ class Gomoku:
 
         return [*rows, *cols, *diag]
 
-    # def generation_pattern(self):
-    #     list = []
-    #     for i in range(5):
-    #         matrix = []
-    #         for zero in range(zeros):
-    #             matrix.append(0)
-    #         for one in range(5 - zeros):
-    #             matrix.append(1)
-    #         list_three_and_four.append(matrix)
-    #
-    #     # Flip patterns horizontally
-    #     reversed_list_three_and_four = []
-    #     for pattern in list_three_and_four:
-    #         matrix = copy.copy(pattern)
-    #         matrix.reverse()
-    #         reversed_list_three_and_four.append(matrix)
-    #
-    #     # Add patterns with hole
-    #     list_hole = []
-    #     for index_hole in range(1, 4):
-    #         matrix = copy.copy(matrix_ones[0])
-    #         matrix[index_hole] = 0
-    #         list_hole.append(matrix)
-    #
-    #     return [matrix_ones, list_three_and_four, reversed_list_three_and_four, list_hole]
-    #
-    # def generation_pattern_by_six(self):
-    #     # Fetch list of patterns by five
-    #     lists_of_patterns = self.generation_pattern_by_five()
-    #
-    #     # Add permutations of 0s and 2s to the side
-    #     for list_of_patterns in lists_of_patterns:
-    #         list_of_patterns_app = copy.copy(list_of_patterns)
-    #         for pattern in list_of_patterns_app:
-    #             pattern_end = copy.copy(pattern)
-    #             pattern.insert(0, 0)
-    #             pattern_end.append(0)
-    #             list_of_patterns.append(pattern_end)
-    #             matrix = copy.copy(pattern)
-    #             matrix_end = copy.copy(pattern_end)
-    #             matrix[0] = 2
-    #             matrix_end[5] = 2
-    #             list_of_patterns.append(matrix)
-    #             list_of_patterns.append(matrix_end)
-    #
-    #     return lists_of_patterns
-    #
-    # def generation_pattern_by_seven(self):
-    #     # Fetch list of patterns by five
-    #     lists_of_patterns = self.generation_pattern_by_five()
-    #
-    #     # Add permutations of 0s and 2s combinations to the sides
-    #     for list_of_patterns in lists_of_patterns:
-    #         list_of_patterns_app = copy.copy(list_of_patterns)
-    #         for pattern in list_of_patterns_app:
-    #             pattern.insert(0, 0)
-    #             pattern.append(0)
-    #             matrix = copy.copy(pattern)
-    #             matrix[0] = 0
-    #             matrix[6] = 2
-    #             list_of_patterns.append(matrix)
-    #             matrix = copy.copy(pattern)
-    #             matrix[0] = 2
-    #             matrix[6] = 0
-    #             list_of_patterns.append(matrix)
-    #             matrix = copy.copy(pattern)
-    #             matrix[0] = 2
-    #             matrix[6] = 2
-    #             list_of_patterns.append(matrix)
-    #
-    #     return lists_of_patterns
-    #
-    # def generation_special_pattern(self):
-    #     # Obtuse angle
-    #     pattern_V_three_obtuse_angle = np.zeros((5, 9))
-    #     pattern_V_four_obtuse_angle = np.zeros((5, 9))
-    #     pattern_V_three_obtuse_angle_central_one = np.zeros((5, 9))
-    #     pattern_V_four_obtuse_angle_central_one = np.zeros((5, 9))
-    #     for r in range(5):
-    #         for c in range(9):
-    #             if (r == c or r == 9 - c - 1) and r != 4:
-    #                 if r != 0:
-    #                     pattern_V_three_obtuse_angle[r, c] = 1
-    #                     pattern_V_three_obtuse_angle_central_one[r, c] = 1
-    #                 pattern_V_four_obtuse_angle[r, c] = 1
-    #                 pattern_V_four_obtuse_angle_central_one[r, c] = 1
-    #             elif r == 4 and c == 4:
-    #                 pattern_V_three_obtuse_angle_central_one[r, c] = 1
-    #                 pattern_V_four_obtuse_angle_central_one[r, c] = 1
-    #
-    #     # Acute angle
-    #     pattern_V_three_acute_angle = np.zeros((5, 5))
-    #     pattern_V_four_acute_angle = np.zeros((5, 5))
-    #     pattern_V_three_acute_angle_central_one = np.zeros((5, 5))
-    #     pattern_V_four_acute_angle_central_one = np.zeros((5, 5))
-    #     for r in range(5):
-    #         for c in range(5):
-    #             if (r == c or c == 4) and r != 4:
-    #                 if r != 0:
-    #                     pattern_V_three_acute_angle[r, c] = 1
-    #                     pattern_V_three_acute_angle_central_one[r, c] = 1
-    #                 pattern_V_four_acute_angle[r, c] = 1
-    #                 pattern_V_four_acute_angle_central_one[r, c] = 1
-    #             elif r == 4 and c == 4:
-    #                 pattern_V_three_acute_angle_central_one[r, c] = 1
-    #                 pattern_V_four_acute_angle_central_one[r, c] = 1
-    #
-    #     # List for each rotation of 90 degree
-    #     list_pattern_V_three_obtuse_angle = []
-    #     list_pattern_V_four_obtuse_angle = []
-    #
-    #     list_pattern_V_three_obtuse_angle_central_one = []
-    #     list_pattern_V_four_obtuse_angle_central_one = []
-    #
-    #     list_pattern_V_three_acute_angle = []
-    #     list_pattern_V_four_acute_angle = []
-    #
-    #     list_pattern_V_three_acute_angle_central_one = []
-    #     list_pattern_V_four_acute_angle_central_one = []
-    #
-    #     for rotation in range(4):
-    #         pattern_V_three_obtuse_angle = np.rot90(pattern_V_three_obtuse_angle)
-    #         list_pattern_V_three_obtuse_angle.append(pattern_V_three_obtuse_angle)
-    #         pattern_V_four_obtuse_angle = np.rot90(pattern_V_four_obtuse_angle)
-    #         list_pattern_V_four_obtuse_angle.append(pattern_V_four_obtuse_angle)
-    #
-    #         pattern_V_three_obtuse_angle_central_one = np.rot90(pattern_V_three_obtuse_angle_central_one)
-    #         list_pattern_V_three_obtuse_angle_central_one.append(pattern_V_three_obtuse_angle_central_one)
-    #         pattern_V_four_obtuse_angle_central_one = np.rot90(pattern_V_four_obtuse_angle_central_one)
-    #         list_pattern_V_four_obtuse_angle_central_one.append(pattern_V_four_obtuse_angle_central_one)
-    #
-    #         pattern_V_three_acute_angle = np.rot90(pattern_V_three_acute_angle)
-    #         list_pattern_V_three_acute_angle.append(pattern_V_three_acute_angle)
-    #         pattern_V_four_acute_angle = np.rot90(pattern_V_four_acute_angle)
-    #         list_pattern_V_four_acute_angle.append(pattern_V_four_acute_angle)
-    #
-    #         pattern_V_three_acute_angle_central_one = np.rot90(pattern_V_three_acute_angle_central_one)
-    #         list_pattern_V_three_acute_angle_central_one.append(pattern_V_three_acute_angle_central_one)
-    #         pattern_V_four_acute_angle_central_one = np.rot90(pattern_V_four_acute_angle_central_one)
-    #         list_pattern_V_four_acute_angle_central_one.append(pattern_V_four_acute_angle_central_one)
-    #
-    #     return [list_pattern_V_four_obtuse_angle,
-    #             list_pattern_V_four_acute_angle,
-    #             list_pattern_V_three_obtuse_angle,
-    #             list_pattern_V_three_acute_angle,
-    #             list_pattern_V_three_obtuse_angle_central_one,
-    #             list_pattern_V_three_acute_angle_central_one,
-    #             list_pattern_V_four_obtuse_angle_central_one,
-    #             list_pattern_V_four_acute_angle_central_one]
-    #
-    # def list_of_pattern_per_score(self):
-    #     list_12800_points = []
-    #     list_6400_points = []
-    #     list_3200_points = []
-    #     list_1600_points = []
-    #     list_800_points = []
-    #     list_400_points = []
-    #
-    #     index = 0
-    #     for list in self.generation_pattern_by_five():
-    #         for pattern in list:
-    #             if index == 0:
-    #                 list_12800_points.append(pattern)
-    #             elif index == 1 or index == 2:
-    #                 if pattern.count(1) == 4:
-    #                     list_1600_points.append(pattern)
-    #                 else:
-    #                     list_400_points.append(pattern)
-    #             else:
-    #                 list_1600_points.append(pattern)
-    #         index = index + 1
-    #
-    #     index = 0
-    #     for list in self.generation_pattern_by_six():
-    #         for pattern in list:
-    #             if index == 0:
-    #                 list_12800_points.append(pattern)
-    #             elif index == 1:
-    #                 if pattern.count(1) == 4:
-    #                     if pattern[0] == 0 and pattern[5] == 0:
-    #                         list_6400_points.append(pattern)
-    #                     else:
-    #                         list_1600_points.append(pattern)
-    #                 else:
-    #                     if not pattern.__contains__(2) and pattern[5] == 0:
-    #                         list_800_points.append(pattern)
-    #                     else:
-    #                         list_400_points.append(pattern)
-    #             elif index == 2:
-    #                 if pattern.count(1) == 4:
-    #                     if pattern[0] == 0 and pattern[5] == 0:
-    #                         list_6400_points.append(pattern)
-    #                     else:
-    #                         list_1600_points.append(pattern)
-    #                 else:
-    #                     if not pattern.__contains__(2) and pattern[0] == 0:
-    #                         list_800_points.append(pattern)
-    #                     else:
-    #                         list_400_points.append(pattern)
-    #             else:
-    #                 list_1600_points.append(pattern)
-    #         index = index + 1
-    #
-    #     index = 0
-    #     for list in self.generation_pattern_by_seven():
-    #         for pattern in list:
-    #             if index == 0:
-    #                 list_12800_points.append(pattern)
-    #             elif index == 1:
-    #                 if pattern.count(1) == 4:
-    #                     if pattern[6] == 0:
-    #                         list_6400_points.append(pattern)
-    #                     else:
-    #                         list_1600_points.append(pattern)
-    #                 else:
-    #                     if pattern[6] == 0:
-    #                         list_800_points.append(pattern)
-    #                     else:
-    #                         list_400_points.append(pattern)
-    #             elif index == 2:
-    #                 if pattern.count(1) == 4:
-    #                     if pattern[0] == 0:
-    #                         list_6400_points.append(pattern)
-    #                     else:
-    #                         list_1600_points.append(pattern)
-    #                 else:
-    #                     if pattern[0] == 0:
-    #                         list_800_points.append(pattern)
-    #                     else:
-    #                         list_400_points.append(pattern)
-    #             else:
-    #                 list_1600_points.append(pattern)
-    #         index = index + 1
-    #
-    #     index = 0
-    #     for list in self.generation_special_pattern():
-    #         for pattern in list:
-    #             if index == 0:
-    #                 list_1600_points.append(pattern)
-    #             elif index == 1:
-    #                 list_1600_points.append(pattern)
-    #             elif index == 2:
-    #                 list_3200_points.append(pattern)
-    #             elif index == 3:
-    #                 list_3200_points.append(pattern)
-    #             elif index == 4:
-    #                 list_6400_points.append(pattern)
-    #             elif index == 5:
-    #                 list_6400_points.append(pattern)
-    #             elif index == 6:
-    #                 list_12800_points.append(pattern)
-    #             elif index == 7:
-    #                 list_12800_points.append(pattern)
-    #         index = index + 1
-    #
-    #     return [list_12800_points,
-    #             list_6400_points,
-    #             list_3200_points,
-    #             list_1600_points,
-    #             list_800_points,
-    #             list_400_points]
-
     def compute_utility(self, board, move, player):
         """If 'X' wins with this move, return 1; if 'O' wins return -1; else return 0."""
-        # matrices = self.extract_matrix(board, move)
         arrays = self.extract_arrays(board)
-        c = 0
-        for a in arrays:
-            c += self.evaluate_line(a)
-        return c
+        score = 0
+        for array in arrays:
+            score += self.evaluate_line(array)
+        return score
 
-    def evaluate_line(self, arr):
-        fiveInRow = self.checkFiveInRow(arr)
-        fourInRow = self.checkFourInRow(arr)
-        brokenFour = self.checkBrokenFour(arr)
-        threeInRow = self.checkThreeInRow(arr)
-        brokenThree = self.checkBrokenThree(arr)
-
+    def evaluate_line(self, array):
+        fiveInRow = self.checkFiveInRow(array)
+        fourInRow = self.checkFourInRow(array)
+        brokenFour = self.checkBrokenFour(array)
+        threeInRow = self.checkThreeInRow(array)
+        brokenThree = self.checkBrokenThree(array)
         return 1000 * fiveInRow + 300 * fourInRow + 200 * brokenFour + 75 * threeInRow + 60 * brokenThree
 
-    def substrings(self, x, n):
-        return np.fromfunction(lambda i, j: x[i + j], (len(x) - n + 1, n),
+    def subarray(self, array, length_subarray):
+        return np.fromfunction(lambda i, j: array[i + j], (len(array) - length_subarray + 1, length_subarray),
                                dtype=int)
 
-    def checkFiveInRow(self, arr):
-        lines = self.substrings(arr, 5)
+    def checkFiveInRow(self, array):
+        lines = self.subarray(array, 5)
         count = 0
-        for l in lines:
-            if np.all(l == [1, 1, 1, 1, 1]):
+        for line in lines:
+            if np.all(line == [1, 1, 1, 1, 1]):
                 count += 1
         return count
 
-    def checkFourInRow(self, arr):
-        lines = self.substrings(arr, 5)
+    def checkFourInRow(self, array):
+        lines = self.subarray(array, 5)
         count = 0
-        for l in lines:
-            if np.all(l == [0, 1, 1, 1, 1]) or np.all(l == [1, 1, 1, 1, 0]):
+        for line in lines:
+            if np.all(line == [0, 1, 1, 1, 1]) or \
+                    np.all(line == [1, 1, 1, 1, 0]):
                 count += 1
         return count
 
-    def checkBrokenFour(self, arr):
-        lines = self.substrings(arr, 5)
+    def checkBrokenFour(self, array):
+        lines = self.subarray(array, 5)
         count = 0
-        for l in lines:
-            if np.all(l == [1, 1, 0, 1, 1]) or np.all(l == [1, 1, 1, 0, 1]) or np.all(l == [1, 0, 1, 1, 1]):
+        for line in lines:
+            if np.all(line == [1, 1, 0, 1, 1]) or \
+                    np.all(line == [1, 1, 1, 0, 1]) or \
+                    np.all(line == [1, 0, 1, 1, 1]):
                 count += 1
         return count
 
-    def checkThreeInRow(self, arr):
-        lines = self.substrings(arr, 5)
+    def checkThreeInRow(self, array):
+        lines = self.subarray(array, 5)
         count = 0
-        for l in lines:
-            if np.all(l == [0, 1, 1, 1, 0]) or np.all(l == [1, 1, 1, 0, 0]) or np.all(l == [0, 0, 1, 1, 1]):
+        for line in lines:
+            if np.all(line == [0, 1, 1, 1, 0]) or \
+                    np.all(line == [1, 1, 1, 0, 0]) or \
+                    np.all(line == [0, 0, 1, 1, 1]):
                 count += 1
         return count
 
-    def checkBrokenThree(self, arr):
-        lines = self.substrings(arr, 5)
+    def checkBrokenThree(self, array):
+        lines = self.subarray(array, 5)
         count = 0
-        for l in lines:
-            if np.all(l == [0, 1, 0, 1, 1]) \
-                    or np.all(l == [0, 1, 1, 0, 1]) \
-                    or np.all(l == [1, 1, 0, 1, 0]) \
-                    or np.all(l == [1, 0, 1, 1, 0]):
+        for line in lines:
+            if np.all(line == [0, 1, 0, 1, 1]) or \
+                    np.all(line == [0, 1, 1, 0, 1]) or \
+                    np.all(line == [1, 1, 0, 1, 0]) or \
+                    np.all(line == [1, 0, 1, 1, 0]):
                 count += 1
         return count
-
-    def check_endgame(self, board, move, player):
-        x, y = move  # coordinates of the last added stone
-        row_start = x - 5 if x - 5 > 0 else 0
-        col_start = y - 5 if y - 5 > 0 else 0
-        # Horizontal
-        count_stones = 0
-        for k in range(2 * 5 - 1):
-            if board[x][y + k] == player:
-                count_stones += 1
-            else:
-                count_stones = 0
-
-    def k_in_row(self, board, move, player, delta_x_y):
-        # Check ends of game
-        count_r = count_c = count_d1 = count_d2 = 0
-        for i in range(self.size):
-            for j in range(self.size):
-
-                # Orizzontale
-                if board[i][j] == player:
-                    count_r += 1
-                    if count_r == 5:
-                        self.win()
-                else:
-                    count_r = 0
-
-                # Verticale
-                if board[j][i] == player:
-                    count_c += 1
-                    if count_c == 5:
-                        self.win()
-                else:
-                    count_c = 0
-
-                # Diagonale 1
-                if i + 5 < self.size and j + 5 < self.size:
-                    for k in range(5):
-                        if board[i + k][j + k] == player:
-                            count_d1 += 1
-                        else:
-                            count_d1 = 0
-                            break
-
-                    if count_d1 == 5:
-                        self.win()
-
-                if i + 5 < self.size and j - 5 < self.size:
-                    for k in range(5):
-                        if board[i + k][j - k] == player:
-                            count_d2 += 1
-                        else:
-                            count_d2 = 0
-                            break
-
-                    if count_d2 == 5:
-                        self.win()
-
-    def init_pygame(self):
-        # Inizializza la partita
-        pygame.init()
-        screen = pygame.display.set_mode((BOARD_WIDTH, BOARD_WIDTH), pygame.RESIZABLE)
-        self.screen = screen
-        self.ZOINK = pygame.mixer.Sound("wav/zoink.wav")
-        self.CLICK = pygame.mixer.Sound("wav/click.wav")
-        self.font = pygame.font.SysFont("arial", 30)
 
     def clear_screen(self):
 
@@ -677,7 +376,6 @@ class Gomoku:
                           moves=self.compute_moves(self.board),
                           branching=3)
         a, b = alpha_beta_player(game, state)
-
         self.board[a, b] = PLAYER_WHITE
 
         # change turns and draw screen
@@ -701,92 +399,6 @@ class Gomoku:
         return set(filter(filtering, [(x, y)
                                       for x in range(self.size)
                                       for y in range(self.size)]))
-
-    def end(self, player, move):
-        # Check ends of game
-        # count_r = count_c = count_d1 = count_d2 = 0
-
-        # TODO: Restrict to neighbourhood of the last move
-        # lines = self.extract_arrays(np.pad(self.board, 1))
-        # opp = PLAYER_BLACK if player == PLAYER_BLACK else PLAYER_WHITE
-        # for line in lines:
-        #     substrings = self.substrings(line, 6)
-        #
-        #     for s in substrings:
-        #         if np.all(s == [opp, player, player, player, player, player, 0]) or \
-        #                 np.all(s == [0, player, player, player, player, player, 0]) or \
-        #                 np.all(s == [0, player, player, player, player, player, opp]) or \
-        #                 np.all(s == [opp, player, player, player, player, player, opp]):
-        #             self.win()
-
-        x, y = move
-        padded = np.pad(self.board, 5)
-        col_tagliata = padded[x - 5:x + 6, y]
-        row_tagliata = padded[x, y - 5:y + 6]
-        diag = np.diag(padded[x - 5:x + 6, y - 5:y + 6])
-        diag2 = np.diag(np.flip(padded[x - 5:x + 6, y - 5:y + 6], 1))
-
-        count = 0
-        for l in [col_tagliata, row_tagliata, diag, diag2]:
-            for elem in l:
-                if elem == player:
-                    count += 1
-                elif count == 5:
-                    break
-                else:
-                    count = 0
-
-            if count == 5:
-                self.win()
-            else:
-                count = 0
-
-        # for i in range(self.size):
-        #     for j in range(self.size):
-        #
-        #         # Orizzontale
-        #         if self.board[i][j] == player:
-        #             count_r += 1
-        #             if count_r == 5:
-        #                 self.win()
-        #         else:
-        #             count_r = 0
-        #
-        #         # Verticale
-        #         if self.board[j][i] == player:
-        #             count_c += 1
-        #             if count_c == 5:
-        #                 self.win()
-        #         else:
-        #             count_c = 0
-        #
-        #         # Diagonale 1
-        #         if i + 5 < self.size and j + 5 < self.size:
-        #             for k in range(5):
-        #                 if self.board[i + k][j + k] == player:
-        #                     count_d1 += 1
-        #                 else:
-        #                     count_d1 = 0
-        #                     break
-        #
-        #             if count_d1 == 5:
-        #                 self.win()
-        #
-        #         if i + 5 < self.size and j - 5 < self.size:
-        #             for k in range(5):
-        #                 if self.board[i + k][j - k] == player:
-        #                     count_d2 += 1
-        #                 else:
-        #                     count_d2 = 0
-        #                     break
-        #
-        #             if count_d2 == 5:
-        #                 self.win()
-
-    def win(self):
-        # TODO: Win
-        exit(1)
-        pass
 
     def critical(self):
         # Check ends of game
@@ -857,43 +469,49 @@ class Gomoku:
                             return True
         return False
 
-    def nuova_mossa(self, my_color):
-        v = random.sample(range(1, 15), 2)
-        while (not is_valid_move(v[0], v[1], self.board)):
-            v = random.sample(range(1, 15), 2)
-        self.board[v[0], v[1]] = my_color
+    def end(self, player, move):
+        # Check ends of game
+        # count_r = count_c = count_d1 = count_d2 = 0
 
-    def draw(self):
-        # draw stones - filled circle and antialiased ring
-        self.clear_screen()
-        for col, row in zip(*np.where(self.board == 1)):
-            x, y = colrow_to_xy(col, row, self.size)
-            gfxdraw.aacircle(self.screen, x, y, STONE_RADIUS, BLACK)
-            gfxdraw.filled_circle(self.screen, x, y, STONE_RADIUS, BLACK)
-        for col, row in zip(*np.where(self.board == 2)):
-            x, y = colrow_to_xy(col, row, self.size)
-            gfxdraw.aacircle(self.screen, x, y, STONE_RADIUS, WHITE)
-            gfxdraw.filled_circle(self.screen, x, y, STONE_RADIUS, WHITE)
+        # TODO: Restrict to neighbourhood of the last move
+        # lines = self.extract_arrays(np.pad(self.board, 1))
+        # opp = PLAYER_BLACK if player == PLAYER_BLACK else PLAYER_WHITE
+        # for line in lines:
+        #     substrings = self.substrings(line, 6)
+        #
+        #     for s in substrings:
+        #         if np.all(s == [opp, player, player, player, player, player, 0]) or \
+        #                 np.all(s == [0, player, player, player, player, player, 0]) or \
+        #                 np.all(s == [0, player, player, player, player, player, opp]) or \
+        #                 np.all(s == [opp, player, player, player, player, player, opp]):
+        #             self.win()
 
-        turn_msg = (
-                f"{'Black' if self.black_turn else 'White'} to move. "
-                + "Click to place stone, press P to pass."
-        )
-        txt = self.font.render(turn_msg, True, BLACK)
-        self.screen.blit(txt, TURN_POS)
+        x, y = move
+        padded = np.pad(self.board, 5)
+        col_tagliata = padded[x - 5:x + 6, y]
+        row_tagliata = padded[x, y - 5:y + 6]
+        diag = np.diag(padded[x - 5:x + 6, y - 5:y + 6])
+        diag2 = np.diag(np.flip(padded[x - 5:x + 6, y - 5:y + 6], 1))
 
-        pygame.display.flip()
+        count = 0
+        for l in [col_tagliata, row_tagliata, diag, diag2]:
+            for elem in l:
+                if elem == player:
+                    count += 1
+                elif count == 5:
+                    break
+                else:
+                    count = 0
 
-    def update(self):
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.MOUSEBUTTONUP:
-                self.handle_click()
-            if event.type == pygame.QUIT:
-                sys.exit()
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_p:
-                    self.pass_move()
+            if count == 5:
+                self.win()
+            else:
+                count = 0
+
+    def win(self):
+        # TODO: Win
+        exit(1)
+        pass
 
 
 if __name__ == "__main__":
