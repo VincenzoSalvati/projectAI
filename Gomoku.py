@@ -1,7 +1,7 @@
 import copy
 from collections import namedtuple
 
-from TickTacToe.games import alpha_beta_player,alpha_beta_search
+from TickTacToe.games import alpha_beta_player, alpha_beta_search
 
 import random
 import pygame
@@ -26,6 +26,8 @@ PLAYER_BLACK = 1
 PLAYER_WHITE = 2
 
 GameState = namedtuple('GameState', 'to_move, utility, board, moves, branching')
+
+
 def make_grid(size):
     """Return list of (start_point, end_point pairs) defining gridlines
     Args:
@@ -168,14 +170,15 @@ class Gomoku:
         if move not in state.moves:
             return state  # Illegal move has no effect
         board = state.board.copy()
+
         board[move] = state.to_move
-        moves = list(state.moves)
-        moves.remove(move)
+
+        moves = self.compute_moves(board)
         return GameState(to_move=(PLAYER_WHITE if state.to_move == PLAYER_BLACK else PLAYER_BLACK),
                          utility=self.compute_utility(board, move, state.to_move),
                          board=board,
                          moves=moves,
-                         branching=state.branching-1)
+                         branching=state.branching - 1)
 
     def utility(self, state, player):
         """Return the value to player; 1 for win, -1 for loss, 0 otherwise."""
@@ -229,295 +232,332 @@ class Gomoku:
 
         return [*rows, *cols, *diag]
 
-    def generation_pattern(self):
-        list = []
-        for i in range(5):
-            matrix = []
-            for zero in range(zeros):
-                matrix.append(0)
-            for one in range(5 - zeros):
-                matrix.append(1)
-            list_three_and_four.append(matrix)
-
-        # Flip patterns horizontally
-        reversed_list_three_and_four = []
-        for pattern in list_three_and_four:
-            matrix = copy.copy(pattern)
-            matrix.reverse()
-            reversed_list_three_and_four.append(matrix)
-
-        # Add patterns with hole
-        list_hole = []
-        for index_hole in range(1, 4):
-            matrix = copy.copy(matrix_ones[0])
-            matrix[index_hole] = 0
-            list_hole.append(matrix)
-
-        return [matrix_ones, list_three_and_four, reversed_list_three_and_four, list_hole]
-
-    def generation_pattern_by_six(self):
-        # Fetch list of patterns by five
-        lists_of_patterns = self.generation_pattern_by_five()
-
-        # Add permutations of 0s and 2s to the side
-        for list_of_patterns in lists_of_patterns:
-            list_of_patterns_app = copy.copy(list_of_patterns)
-            for pattern in list_of_patterns_app:
-                pattern_end = copy.copy(pattern)
-                pattern.insert(0, 0)
-                pattern_end.append(0)
-                list_of_patterns.append(pattern_end)
-                matrix = copy.copy(pattern)
-                matrix_end = copy.copy(pattern_end)
-                matrix[0] = 2
-                matrix_end[5] = 2
-                list_of_patterns.append(matrix)
-                list_of_patterns.append(matrix_end)
-
-        return lists_of_patterns
-
-    def generation_pattern_by_seven(self):
-        # Fetch list of patterns by five
-        lists_of_patterns = self.generation_pattern_by_five()
-
-        # Add permutations of 0s and 2s combinations to the sides
-        for list_of_patterns in lists_of_patterns:
-            list_of_patterns_app = copy.copy(list_of_patterns)
-            for pattern in list_of_patterns_app:
-                pattern.insert(0, 0)
-                pattern.append(0)
-                matrix = copy.copy(pattern)
-                matrix[0] = 0
-                matrix[6] = 2
-                list_of_patterns.append(matrix)
-                matrix = copy.copy(pattern)
-                matrix[0] = 2
-                matrix[6] = 0
-                list_of_patterns.append(matrix)
-                matrix = copy.copy(pattern)
-                matrix[0] = 2
-                matrix[6] = 2
-                list_of_patterns.append(matrix)
-
-        return lists_of_patterns
-
-    def generation_special_pattern(self):
-        # Obtuse angle
-        pattern_V_three_obtuse_angle = np.zeros((5, 9))
-        pattern_V_four_obtuse_angle = np.zeros((5, 9))
-        pattern_V_three_obtuse_angle_central_one = np.zeros((5, 9))
-        pattern_V_four_obtuse_angle_central_one = np.zeros((5, 9))
-        for r in range(5):
-            for c in range(9):
-                if (r == c or r == 9 - c - 1) and r != 4:
-                    if r != 0:
-                        pattern_V_three_obtuse_angle[r, c] = 1
-                        pattern_V_three_obtuse_angle_central_one[r, c] = 1
-                    pattern_V_four_obtuse_angle[r, c] = 1
-                    pattern_V_four_obtuse_angle_central_one[r, c] = 1
-                elif r == 4 and c == 4:
-                    pattern_V_three_obtuse_angle_central_one[r, c] = 1
-                    pattern_V_four_obtuse_angle_central_one[r, c] = 1
-
-        # Acute angle
-        pattern_V_three_acute_angle = np.zeros((5, 5))
-        pattern_V_four_acute_angle = np.zeros((5, 5))
-        pattern_V_three_acute_angle_central_one = np.zeros((5, 5))
-        pattern_V_four_acute_angle_central_one = np.zeros((5, 5))
-        for r in range(5):
-            for c in range(5):
-                if (r == c or c == 4) and r != 4:
-                    if r != 0:
-                        pattern_V_three_acute_angle[r, c] = 1
-                        pattern_V_three_acute_angle_central_one[r, c] = 1
-                    pattern_V_four_acute_angle[r, c] = 1
-                    pattern_V_four_acute_angle_central_one[r, c] = 1
-                elif r == 4 and c == 4:
-                    pattern_V_three_acute_angle_central_one[r, c] = 1
-                    pattern_V_four_acute_angle_central_one[r, c] = 1
-
-        # List for each rotation of 90 degree
-        list_pattern_V_three_obtuse_angle = []
-        list_pattern_V_four_obtuse_angle = []
-
-        list_pattern_V_three_obtuse_angle_central_one = []
-        list_pattern_V_four_obtuse_angle_central_one = []
-
-        list_pattern_V_three_acute_angle = []
-        list_pattern_V_four_acute_angle = []
-
-        list_pattern_V_three_acute_angle_central_one = []
-        list_pattern_V_four_acute_angle_central_one = []
-
-        for rotation in range(4):
-            pattern_V_three_obtuse_angle = np.rot90(pattern_V_three_obtuse_angle)
-            list_pattern_V_three_obtuse_angle.append(pattern_V_three_obtuse_angle)
-            pattern_V_four_obtuse_angle = np.rot90(pattern_V_four_obtuse_angle)
-            list_pattern_V_four_obtuse_angle.append(pattern_V_four_obtuse_angle)
-
-            pattern_V_three_obtuse_angle_central_one = np.rot90(pattern_V_three_obtuse_angle_central_one)
-            list_pattern_V_three_obtuse_angle_central_one.append(pattern_V_three_obtuse_angle_central_one)
-            pattern_V_four_obtuse_angle_central_one = np.rot90(pattern_V_four_obtuse_angle_central_one)
-            list_pattern_V_four_obtuse_angle_central_one.append(pattern_V_four_obtuse_angle_central_one)
-
-            pattern_V_three_acute_angle = np.rot90(pattern_V_three_acute_angle)
-            list_pattern_V_three_acute_angle.append(pattern_V_three_acute_angle)
-            pattern_V_four_acute_angle = np.rot90(pattern_V_four_acute_angle)
-            list_pattern_V_four_acute_angle.append(pattern_V_four_acute_angle)
-
-            pattern_V_three_acute_angle_central_one = np.rot90(pattern_V_three_acute_angle_central_one)
-            list_pattern_V_three_acute_angle_central_one.append(pattern_V_three_acute_angle_central_one)
-            pattern_V_four_acute_angle_central_one = np.rot90(pattern_V_four_acute_angle_central_one)
-            list_pattern_V_four_acute_angle_central_one.append(pattern_V_four_acute_angle_central_one)
-
-        return [list_pattern_V_four_obtuse_angle,
-                list_pattern_V_four_acute_angle,
-                list_pattern_V_three_obtuse_angle,
-                list_pattern_V_three_acute_angle,
-                list_pattern_V_three_obtuse_angle_central_one,
-                list_pattern_V_three_acute_angle_central_one,
-                list_pattern_V_four_obtuse_angle_central_one,
-                list_pattern_V_four_acute_angle_central_one]
-
-    def list_of_pattern_per_score(self):
-        list_12800_points = []
-        list_6400_points = []
-        list_3200_points = []
-        list_1600_points = []
-        list_800_points = []
-        list_400_points = []
-
-        index = 0
-        for list in self.generation_pattern_by_five():
-            for pattern in list:
-                if index == 0:
-                    list_12800_points.append(pattern)
-                elif index == 1 or index == 2:
-                    if pattern.count(1) == 4:
-                        list_1600_points.append(pattern)
-                    else:
-                        list_400_points.append(pattern)
-                else:
-                    list_1600_points.append(pattern)
-            index = index + 1
-
-        index = 0
-        for list in self.generation_pattern_by_six():
-            for pattern in list:
-                if index == 0:
-                    list_12800_points.append(pattern)
-                elif index == 1:
-                    if pattern.count(1) == 4:
-                        if pattern[0] == 0 and pattern[5] == 0:
-                            list_6400_points.append(pattern)
-                        else:
-                            list_1600_points.append(pattern)
-                    else:
-                        if not pattern.__contains__(2) and pattern[5] == 0:
-                            list_800_points.append(pattern)
-                        else:
-                            list_400_points.append(pattern)
-                elif index == 2:
-                    if pattern.count(1) == 4:
-                        if pattern[0] == 0 and pattern[5] == 0:
-                            list_6400_points.append(pattern)
-                        else:
-                            list_1600_points.append(pattern)
-                    else:
-                        if not pattern.__contains__(2) and pattern[0] == 0:
-                            list_800_points.append(pattern)
-                        else:
-                            list_400_points.append(pattern)
-                else:
-                    list_1600_points.append(pattern)
-            index = index + 1
-
-        index = 0
-        for list in self.generation_pattern_by_seven():
-            for pattern in list:
-                if index == 0:
-                    list_12800_points.append(pattern)
-                elif index == 1:
-                    if pattern.count(1) == 4:
-                        if pattern[6] == 0:
-                            list_6400_points.append(pattern)
-                        else:
-                            list_1600_points.append(pattern)
-                    else:
-                        if pattern[6] == 0:
-                            list_800_points.append(pattern)
-                        else:
-                            list_400_points.append(pattern)
-                elif index == 2:
-                    if pattern.count(1) == 4:
-                        if pattern[0] == 0:
-                            list_6400_points.append(pattern)
-                        else:
-                            list_1600_points.append(pattern)
-                    else:
-                        if pattern[0] == 0:
-                            list_800_points.append(pattern)
-                        else:
-                            list_400_points.append(pattern)
-                else:
-                    list_1600_points.append(pattern)
-            index = index + 1
-
-        index = 0
-        for list in self.generation_special_pattern():
-            for pattern in list:
-                if index == 0:
-                    list_1600_points.append(pattern)
-                elif index == 1:
-                    list_1600_points.append(pattern)
-                elif index == 2:
-                    list_3200_points.append(pattern)
-                elif index == 3:
-                    list_3200_points.append(pattern)
-                elif index == 4:
-                    list_6400_points.append(pattern)
-                elif index == 5:
-                    list_6400_points.append(pattern)
-                elif index == 6:
-                    list_12800_points.append(pattern)
-                elif index == 7:
-                    list_12800_points.append(pattern)
-            index = index + 1
-
-        return [list_12800_points,
-                list_6400_points,
-                list_3200_points,
-                list_1600_points,
-                list_800_points,
-                list_400_points]
+    # def generation_pattern(self):
+    #     list = []
+    #     for i in range(5):
+    #         matrix = []
+    #         for zero in range(zeros):
+    #             matrix.append(0)
+    #         for one in range(5 - zeros):
+    #             matrix.append(1)
+    #         list_three_and_four.append(matrix)
+    #
+    #     # Flip patterns horizontally
+    #     reversed_list_three_and_four = []
+    #     for pattern in list_three_and_four:
+    #         matrix = copy.copy(pattern)
+    #         matrix.reverse()
+    #         reversed_list_three_and_four.append(matrix)
+    #
+    #     # Add patterns with hole
+    #     list_hole = []
+    #     for index_hole in range(1, 4):
+    #         matrix = copy.copy(matrix_ones[0])
+    #         matrix[index_hole] = 0
+    #         list_hole.append(matrix)
+    #
+    #     return [matrix_ones, list_three_and_four, reversed_list_three_and_four, list_hole]
+    #
+    # def generation_pattern_by_six(self):
+    #     # Fetch list of patterns by five
+    #     lists_of_patterns = self.generation_pattern_by_five()
+    #
+    #     # Add permutations of 0s and 2s to the side
+    #     for list_of_patterns in lists_of_patterns:
+    #         list_of_patterns_app = copy.copy(list_of_patterns)
+    #         for pattern in list_of_patterns_app:
+    #             pattern_end = copy.copy(pattern)
+    #             pattern.insert(0, 0)
+    #             pattern_end.append(0)
+    #             list_of_patterns.append(pattern_end)
+    #             matrix = copy.copy(pattern)
+    #             matrix_end = copy.copy(pattern_end)
+    #             matrix[0] = 2
+    #             matrix_end[5] = 2
+    #             list_of_patterns.append(matrix)
+    #             list_of_patterns.append(matrix_end)
+    #
+    #     return lists_of_patterns
+    #
+    # def generation_pattern_by_seven(self):
+    #     # Fetch list of patterns by five
+    #     lists_of_patterns = self.generation_pattern_by_five()
+    #
+    #     # Add permutations of 0s and 2s combinations to the sides
+    #     for list_of_patterns in lists_of_patterns:
+    #         list_of_patterns_app = copy.copy(list_of_patterns)
+    #         for pattern in list_of_patterns_app:
+    #             pattern.insert(0, 0)
+    #             pattern.append(0)
+    #             matrix = copy.copy(pattern)
+    #             matrix[0] = 0
+    #             matrix[6] = 2
+    #             list_of_patterns.append(matrix)
+    #             matrix = copy.copy(pattern)
+    #             matrix[0] = 2
+    #             matrix[6] = 0
+    #             list_of_patterns.append(matrix)
+    #             matrix = copy.copy(pattern)
+    #             matrix[0] = 2
+    #             matrix[6] = 2
+    #             list_of_patterns.append(matrix)
+    #
+    #     return lists_of_patterns
+    #
+    # def generation_special_pattern(self):
+    #     # Obtuse angle
+    #     pattern_V_three_obtuse_angle = np.zeros((5, 9))
+    #     pattern_V_four_obtuse_angle = np.zeros((5, 9))
+    #     pattern_V_three_obtuse_angle_central_one = np.zeros((5, 9))
+    #     pattern_V_four_obtuse_angle_central_one = np.zeros((5, 9))
+    #     for r in range(5):
+    #         for c in range(9):
+    #             if (r == c or r == 9 - c - 1) and r != 4:
+    #                 if r != 0:
+    #                     pattern_V_three_obtuse_angle[r, c] = 1
+    #                     pattern_V_three_obtuse_angle_central_one[r, c] = 1
+    #                 pattern_V_four_obtuse_angle[r, c] = 1
+    #                 pattern_V_four_obtuse_angle_central_one[r, c] = 1
+    #             elif r == 4 and c == 4:
+    #                 pattern_V_three_obtuse_angle_central_one[r, c] = 1
+    #                 pattern_V_four_obtuse_angle_central_one[r, c] = 1
+    #
+    #     # Acute angle
+    #     pattern_V_three_acute_angle = np.zeros((5, 5))
+    #     pattern_V_four_acute_angle = np.zeros((5, 5))
+    #     pattern_V_three_acute_angle_central_one = np.zeros((5, 5))
+    #     pattern_V_four_acute_angle_central_one = np.zeros((5, 5))
+    #     for r in range(5):
+    #         for c in range(5):
+    #             if (r == c or c == 4) and r != 4:
+    #                 if r != 0:
+    #                     pattern_V_three_acute_angle[r, c] = 1
+    #                     pattern_V_three_acute_angle_central_one[r, c] = 1
+    #                 pattern_V_four_acute_angle[r, c] = 1
+    #                 pattern_V_four_acute_angle_central_one[r, c] = 1
+    #             elif r == 4 and c == 4:
+    #                 pattern_V_three_acute_angle_central_one[r, c] = 1
+    #                 pattern_V_four_acute_angle_central_one[r, c] = 1
+    #
+    #     # List for each rotation of 90 degree
+    #     list_pattern_V_three_obtuse_angle = []
+    #     list_pattern_V_four_obtuse_angle = []
+    #
+    #     list_pattern_V_three_obtuse_angle_central_one = []
+    #     list_pattern_V_four_obtuse_angle_central_one = []
+    #
+    #     list_pattern_V_three_acute_angle = []
+    #     list_pattern_V_four_acute_angle = []
+    #
+    #     list_pattern_V_three_acute_angle_central_one = []
+    #     list_pattern_V_four_acute_angle_central_one = []
+    #
+    #     for rotation in range(4):
+    #         pattern_V_three_obtuse_angle = np.rot90(pattern_V_three_obtuse_angle)
+    #         list_pattern_V_three_obtuse_angle.append(pattern_V_three_obtuse_angle)
+    #         pattern_V_four_obtuse_angle = np.rot90(pattern_V_four_obtuse_angle)
+    #         list_pattern_V_four_obtuse_angle.append(pattern_V_four_obtuse_angle)
+    #
+    #         pattern_V_three_obtuse_angle_central_one = np.rot90(pattern_V_three_obtuse_angle_central_one)
+    #         list_pattern_V_three_obtuse_angle_central_one.append(pattern_V_three_obtuse_angle_central_one)
+    #         pattern_V_four_obtuse_angle_central_one = np.rot90(pattern_V_four_obtuse_angle_central_one)
+    #         list_pattern_V_four_obtuse_angle_central_one.append(pattern_V_four_obtuse_angle_central_one)
+    #
+    #         pattern_V_three_acute_angle = np.rot90(pattern_V_three_acute_angle)
+    #         list_pattern_V_three_acute_angle.append(pattern_V_three_acute_angle)
+    #         pattern_V_four_acute_angle = np.rot90(pattern_V_four_acute_angle)
+    #         list_pattern_V_four_acute_angle.append(pattern_V_four_acute_angle)
+    #
+    #         pattern_V_three_acute_angle_central_one = np.rot90(pattern_V_three_acute_angle_central_one)
+    #         list_pattern_V_three_acute_angle_central_one.append(pattern_V_three_acute_angle_central_one)
+    #         pattern_V_four_acute_angle_central_one = np.rot90(pattern_V_four_acute_angle_central_one)
+    #         list_pattern_V_four_acute_angle_central_one.append(pattern_V_four_acute_angle_central_one)
+    #
+    #     return [list_pattern_V_four_obtuse_angle,
+    #             list_pattern_V_four_acute_angle,
+    #             list_pattern_V_three_obtuse_angle,
+    #             list_pattern_V_three_acute_angle,
+    #             list_pattern_V_three_obtuse_angle_central_one,
+    #             list_pattern_V_three_acute_angle_central_one,
+    #             list_pattern_V_four_obtuse_angle_central_one,
+    #             list_pattern_V_four_acute_angle_central_one]
+    #
+    # def list_of_pattern_per_score(self):
+    #     list_12800_points = []
+    #     list_6400_points = []
+    #     list_3200_points = []
+    #     list_1600_points = []
+    #     list_800_points = []
+    #     list_400_points = []
+    #
+    #     index = 0
+    #     for list in self.generation_pattern_by_five():
+    #         for pattern in list:
+    #             if index == 0:
+    #                 list_12800_points.append(pattern)
+    #             elif index == 1 or index == 2:
+    #                 if pattern.count(1) == 4:
+    #                     list_1600_points.append(pattern)
+    #                 else:
+    #                     list_400_points.append(pattern)
+    #             else:
+    #                 list_1600_points.append(pattern)
+    #         index = index + 1
+    #
+    #     index = 0
+    #     for list in self.generation_pattern_by_six():
+    #         for pattern in list:
+    #             if index == 0:
+    #                 list_12800_points.append(pattern)
+    #             elif index == 1:
+    #                 if pattern.count(1) == 4:
+    #                     if pattern[0] == 0 and pattern[5] == 0:
+    #                         list_6400_points.append(pattern)
+    #                     else:
+    #                         list_1600_points.append(pattern)
+    #                 else:
+    #                     if not pattern.__contains__(2) and pattern[5] == 0:
+    #                         list_800_points.append(pattern)
+    #                     else:
+    #                         list_400_points.append(pattern)
+    #             elif index == 2:
+    #                 if pattern.count(1) == 4:
+    #                     if pattern[0] == 0 and pattern[5] == 0:
+    #                         list_6400_points.append(pattern)
+    #                     else:
+    #                         list_1600_points.append(pattern)
+    #                 else:
+    #                     if not pattern.__contains__(2) and pattern[0] == 0:
+    #                         list_800_points.append(pattern)
+    #                     else:
+    #                         list_400_points.append(pattern)
+    #             else:
+    #                 list_1600_points.append(pattern)
+    #         index = index + 1
+    #
+    #     index = 0
+    #     for list in self.generation_pattern_by_seven():
+    #         for pattern in list:
+    #             if index == 0:
+    #                 list_12800_points.append(pattern)
+    #             elif index == 1:
+    #                 if pattern.count(1) == 4:
+    #                     if pattern[6] == 0:
+    #                         list_6400_points.append(pattern)
+    #                     else:
+    #                         list_1600_points.append(pattern)
+    #                 else:
+    #                     if pattern[6] == 0:
+    #                         list_800_points.append(pattern)
+    #                     else:
+    #                         list_400_points.append(pattern)
+    #             elif index == 2:
+    #                 if pattern.count(1) == 4:
+    #                     if pattern[0] == 0:
+    #                         list_6400_points.append(pattern)
+    #                     else:
+    #                         list_1600_points.append(pattern)
+    #                 else:
+    #                     if pattern[0] == 0:
+    #                         list_800_points.append(pattern)
+    #                     else:
+    #                         list_400_points.append(pattern)
+    #             else:
+    #                 list_1600_points.append(pattern)
+    #         index = index + 1
+    #
+    #     index = 0
+    #     for list in self.generation_special_pattern():
+    #         for pattern in list:
+    #             if index == 0:
+    #                 list_1600_points.append(pattern)
+    #             elif index == 1:
+    #                 list_1600_points.append(pattern)
+    #             elif index == 2:
+    #                 list_3200_points.append(pattern)
+    #             elif index == 3:
+    #                 list_3200_points.append(pattern)
+    #             elif index == 4:
+    #                 list_6400_points.append(pattern)
+    #             elif index == 5:
+    #                 list_6400_points.append(pattern)
+    #             elif index == 6:
+    #                 list_12800_points.append(pattern)
+    #             elif index == 7:
+    #                 list_12800_points.append(pattern)
+    #         index = index + 1
+    #
+    #     return [list_12800_points,
+    #             list_6400_points,
+    #             list_3200_points,
+    #             list_1600_points,
+    #             list_800_points,
+    #             list_400_points]
 
     def compute_utility(self, board, move, player):
         """If 'X' wins with this move, return 1; if 'O' wins return -1; else return 0."""
-        matrices = self.extract_matrix(board, move)
-        arrays = self.extract_arrays(board, move)
+        # matrices = self.extract_matrix(board, move)
+        arrays = self.extract_arrays(board)
         c = 0
         for a in arrays:
             c += self.evaluate_line(a)
         return c
-        print("CIAO")
-
 
     def evaluate_line(self, arr):
         fiveInRow = self.checkFiveInRow(arr)
-        fourInRow = self.checkFiveInRow(arr)
-        brokenFour = self.checkFiveInRow(arr)
+        fourInRow = self.checkFourInRow(arr)
+        brokenFour = self.checkBrokenFour(arr)
+        threeInRow = self.checkThreeInRow(arr)
+        brokenThree = self.checkBrokenThree(arr)
 
-        return 100000 * fiveInRow + 5000 * fourInRow + 3000 * brokenFour;
+        return 1000 * fiveInRow + 300 * fourInRow + 200 * brokenFour + 75 * threeInRow + 60 * brokenThree
 
     def substrings(self, x, n):
         return np.fromfunction(lambda i, j: x[i + j], (len(x) - n + 1, n),
-                                  dtype=int)
-    def checkFiveInRow(self, arr):
-        list = self.substrings(arr, 7)
-        for l in list:
-            if l == [0, 1, 1 ,1 ,1 ,1, 0]:
-                return 1
+                               dtype=int)
 
+    def checkFiveInRow(self, arr):
+        lines = self.substrings(arr, 5)
+        count = 0
+        for l in lines:
+            if np.all(l == [1, 1, 1, 1, 1]):
+                count += 1
+        return count
+
+    def checkFourInRow(self, arr):
+        lines = self.substrings(arr, 5)
+        count = 0
+        for l in lines:
+            if np.all(l == [0, 1, 1, 1, 1]) or np.all(l == [1, 1, 1, 1, 0]):
+                count += 1
+        return count
+
+    def checkBrokenFour(self, arr):
+        lines = self.substrings(arr, 5)
+        count = 0
+        for l in lines:
+            if np.all(l == [1, 1, 0, 1, 1]) or np.all(l == [1, 1, 1, 0, 1]) or np.all(l == [1, 0, 1, 1, 1]):
+                count += 1
+        return count
+
+    def checkThreeInRow(self, arr):
+        lines = self.substrings(arr, 5)
+        count = 0
+        for l in lines:
+            if np.all(l == [0, 1, 1, 1, 0]) or np.all(l == [1, 1, 1, 0, 0]) or np.all(l == [0, 0, 1, 1, 1]):
+                count += 1
+        return count
+
+    def checkBrokenThree(self, arr):
+        lines = self.substrings(arr, 5)
+        count = 0
+        for l in lines:
+            if np.all(l == [0, 1, 0, 1, 1]) \
+                    or np.all(l == [0, 1, 1, 0, 1]) \
+                    or np.all(l == [1, 1, 0, 1, 0]) \
+                    or np.all(l == [1, 0, 1, 1, 0]):
+                count += 1
+        return count
 
     def check_endgame(self, board, move, player):
         x, y = move  # coordinates of the last added stone
@@ -625,28 +665,42 @@ class Gomoku:
 
         # TODO : End of Game
         self.end()
-
-        def filtering(position):
-            x, y = position
-            if self.board[x - 1][y - 1] == 0:
-                return True
-            else:
-                return False
+        # change turns and draw screen
+        self.CLICK.play()
+        # self.black_turn = not self.black_turn
+        self.draw()
 
         # Mossa del BOT
         global game
-        state = GameState(to_move=PLAYER_BLACK,
+        state = GameState(to_move=PLAYER_WHITE,
                           utility=0,
                           board=self.board,
-                          moves=set(filter(filtering, [(x, y)
-                                                       for x in range(1, self.size + 1)
-                                                       for y in range(1, self.size + 1)])))
+                          moves=self.compute_moves(self.board),
+                          branching=3)
         a, b = alpha_beta_player(game, state)
+
+        self.board[a, b] = PLAYER_WHITE
 
         # change turns and draw screen
         self.CLICK.play()
         # self.black_turn = not self.black_turn
         self.draw()
+
+    def compute_moves(self, board):
+
+        def filtering(position):
+            x, y = position
+            padded = np.pad(board, 1)
+
+            if board[x][y] == 0:
+                if np.any(padded[x:x+3, y:y+3] != 0):
+                    return True
+            else:
+                return False
+
+        return set(filter(filtering, [(x, y)
+                                      for x in range(self.size)
+                                      for y in range(self.size)]))
 
     def end(self):
         # Check ends of game
