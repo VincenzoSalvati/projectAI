@@ -663,8 +663,7 @@ class Gomoku:
         self_color = "black" if self.black_turn else "white"
         other_color = "white" if self.black_turn else "black"
 
-        # TODO : End of Game
-        self.end()
+        self.end(PLAYER_BLACK, (col, row))
         # change turns and draw screen
         self.CLICK.play()
         # self.black_turn = not self.black_turn
@@ -685,6 +684,7 @@ class Gomoku:
         self.CLICK.play()
         # self.black_turn = not self.black_turn
         self.draw()
+        self.end(PLAYER_WHITE, (a, b))
 
     def compute_moves(self, board):
 
@@ -693,7 +693,7 @@ class Gomoku:
             padded = np.pad(board, 1)
 
             if board[x][y] == 0:
-                if np.any(padded[x:x+3, y:y+3] != 0):
+                if np.any(padded[x:x + 3, y:y + 3] != 0):
                     return True
             else:
                 return False
@@ -702,52 +702,86 @@ class Gomoku:
                                       for x in range(self.size)
                                       for y in range(self.size)]))
 
-    def end(self):
+    def end(self, player, move):
         # Check ends of game
-        count_r = count_c = count_d1 = count_d2 = 0
-        curr = 1.0 if self.black_turn else 2.0
+        # count_r = count_c = count_d1 = count_d2 = 0
 
-        for i in range(self.size):
-            for j in range(self.size):
+        # TODO: Restrict to neighbourhood of the last move
+        # lines = self.extract_arrays(np.pad(self.board, 1))
+        # opp = PLAYER_BLACK if player == PLAYER_BLACK else PLAYER_WHITE
+        # for line in lines:
+        #     substrings = self.substrings(line, 6)
+        #
+        #     for s in substrings:
+        #         if np.all(s == [opp, player, player, player, player, player, 0]) or \
+        #                 np.all(s == [0, player, player, player, player, player, 0]) or \
+        #                 np.all(s == [0, player, player, player, player, player, opp]) or \
+        #                 np.all(s == [opp, player, player, player, player, player, opp]):
+        #             self.win()
 
-                # Orizzontale
-                if self.board[i][j] == curr:
-                    count_r += 1
-                    if count_r == 5:
-                        self.win()
+        x, y = move
+        padded = np.pad(self.board, 5)
+        col_tagliata = padded[x - 5:x + 6, y]
+        row_tagliata = padded[x, y - 5:y + 6]
+        diag = np.diag(padded[x - 5:x + 6, y - 5:y + 6])
+        diag2 = np.diag(np.flip(padded[x - 5:x + 6, y - 5:y + 6], 1))
+
+        count = 0
+        for l in [col_tagliata, row_tagliata, diag, diag2]:
+            for elem in l:
+                if elem == player:
+                    count += 1
+                elif count == 5:
+                    break
                 else:
-                    count_r = 0
+                    count = 0
 
-                # Verticale
-                if self.board[j][i] == curr:
-                    count_c += 1
-                    if count_c == 5:
-                        self.win()
-                else:
-                    count_c = 0
+            if count == 5:
+                self.win()
+            else:
+                count = 0
 
-                # Diagonale 1
-                if i + 5 < self.size and j + 5 < self.size:
-                    for k in range(5):
-                        if self.board[i + k][j + k] == curr:
-                            count_d1 += 1
-                        else:
-                            count_d1 = 0
-                            break
-
-                    if count_d1 == 5:
-                        self.win()
-
-                if i + 5 < self.size and j - 5 < self.size:
-                    for k in range(5):
-                        if self.board[i + k][j - k] == curr:
-                            count_d2 += 1
-                        else:
-                            count_d2 = 0
-                            break
-
-                    if count_d2 == 5:
-                        self.win()
+        # for i in range(self.size):
+        #     for j in range(self.size):
+        #
+        #         # Orizzontale
+        #         if self.board[i][j] == player:
+        #             count_r += 1
+        #             if count_r == 5:
+        #                 self.win()
+        #         else:
+        #             count_r = 0
+        #
+        #         # Verticale
+        #         if self.board[j][i] == player:
+        #             count_c += 1
+        #             if count_c == 5:
+        #                 self.win()
+        #         else:
+        #             count_c = 0
+        #
+        #         # Diagonale 1
+        #         if i + 5 < self.size and j + 5 < self.size:
+        #             for k in range(5):
+        #                 if self.board[i + k][j + k] == player:
+        #                     count_d1 += 1
+        #                 else:
+        #                     count_d1 = 0
+        #                     break
+        #
+        #             if count_d1 == 5:
+        #                 self.win()
+        #
+        #         if i + 5 < self.size and j - 5 < self.size:
+        #             for k in range(5):
+        #                 if self.board[i + k][j - k] == player:
+        #                     count_d2 += 1
+        #                 else:
+        #                     count_d2 = 0
+        #                     break
+        #
+        #             if count_d2 == 5:
+        #                 self.win()
 
     def win(self):
         # TODO: Win
