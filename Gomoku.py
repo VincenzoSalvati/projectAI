@@ -1,6 +1,7 @@
 import copy
+from collections import namedtuple
 
-from TickTacToe.games import *
+from TickTacToe.games import alpha_beta_player,alpha_beta_search
 
 import random
 import pygame
@@ -24,7 +25,7 @@ DOT_RADIUS = 4
 PLAYER_BLACK = 1
 PLAYER_WHITE = 2
 
-
+GameState = namedtuple('GameState', 'to_move, utility, board, moves, branching')
 def make_grid(size):
     """Return list of (start_point, end_point pairs) defining gridlines
     Args:
@@ -149,15 +150,15 @@ class Gomoku:
     def __init__(self, size, k=5):
 
         self.k = k
-        moves = [(x, y) for x in range(1, size + 1)
-                 for y in range(1, size + 1)]
+        moves = [(x, y) for x in range(size)
+                 for y in range(size)]
 
         self.board = np.zeros((size, size))
         self.size = size
         self.black_turn = True
         self.start_points, self.end_points = make_grid(self.size)
 
-        self.initial = GameState(to_move=PLAYER_BLACK, utility=0, board=self.board, moves=moves)
+        self.initial = GameState(to_move=PLAYER_BLACK, utility=0, board=self.board, moves=moves, branching=3)
 
     def actions(self, state):
         """Legal moves are any square not yet taken."""
@@ -173,7 +174,8 @@ class Gomoku:
         return GameState(to_move=(PLAYER_WHITE if state.to_move == PLAYER_BLACK else PLAYER_BLACK),
                          utility=self.compute_utility(board, move, state.to_move),
                          board=board,
-                         moves=moves)
+                         moves=moves,
+                         branching=state.branching-1)
 
     def utility(self, state, player):
         """Return the value to player; 1 for win, -1 for loss, 0 otherwise."""
@@ -181,7 +183,7 @@ class Gomoku:
 
     def terminal_test(self, state):
         """A state is terminal if it is won or there are no empty squares."""
-        return state.utility != 0 or len(state.moves) == 0
+        return state.utility != 0 or len(state.moves) == 0 or state.branching == 0
 
     def display(self, state):
         board = state.board
@@ -206,55 +208,30 @@ class Gomoku:
 
         return list
 
-    def extract_arrays(self, board, move):
+    def extract_arrays(self, board):
 
-        x, y = move
+        diag = []
+        transpose_board = np.transpose(board)
+        flipped_board = np.flip(board, 1)
+        flipped_transposed = np.transpose(flipped_board)
+
+        rows = [board[_, :] for _ in range(board.shape[0])]
+        cols = [board[:, _] for _ in range(board.shape[1])]
+
+        # Extract all diagonals
+        for j in range(self.size - self.k + 1):
+            if (j + self.k <= self.size):
+                diag.append(np.diag(board[0:, j:]))
+                diag.append(np.diag(flipped_board[0:, j:]))
+                if j != 0:
+                    diag.append(np.diag(transpose_board[0:, j:]))
+                    diag.append(np.diag(flipped_transposed[0:, j:]))
+
+        return [*rows, *cols, *diag]
+
+    def generation_pattern(self):
         list = []
-
-        start_row = x - 5 if x - 5 >= 0 else 0
-        start_col = y - 5 if y - 5 >= 0 else 0
-
-        end_row = x + 5 if x + 5 <= self.size else self.size
-        end_col = y + 5 if y + 5 <= self.size else self.size
-
-        spazi_prima_colonne = 5 if y - 5 >= 0 else y
-        spazi_dopo_colonne = 5 if y + 5 <= self.size else self.size - y
-
-        if spazi_prima_colonne == spazi_dopo_colonne == 5:
-            for i in range(6):
-                # Horizontal
-                list.append(board[x, y - i:y + 5 - i])
-        elif spazi_prima_colonne != 5:
-            for i in range(spazi_prima_colonne):
-                list.append(board[x, y - i:y + 5 - i])
-        else:
-            for i in range(spazi_dopo_colonne):
-                list.append(board[x, y - 5 + i: y + i])
-        #
-        # transpose_board = np.transpose(board)
-        # for i in range(spazi_prima_colonne):
-        #     # Horizontal
-        #     list.append(board[x, y-i:y+5-i])
-
-        # for i in range(end_row - start_row):
-        #     # Vertical
-        #     list.append(board[start_row + i:end_row - i, y])
-        #
-        # for i in range(min(end_col - start_col, end_row - start_row)):
-        #     # Diag1
-        #     list.append(np.diag(board[start_row + i:end_row - i, start_col + i:end_col - i]))
-        #     # Diag2
-        #     list.append(np.diag(transpose_board[start_row + i:end_row - i, start_col + i:end_col - i]))
-
-        return list
-
-    def generation_pattern_by_five(self):
-        # Winning matrix
-        matrix_ones = [[1, 1, 1, 1, 1]]
-
-        # Series of 3 and 4
-        list_three_and_four = []
-        for zeros in range(1, 3):
+        for i in range(5):
             matrix = []
             for zero in range(zeros):
                 matrix.append(0)
@@ -518,7 +495,29 @@ class Gomoku:
         """If 'X' wins with this move, return 1; if 'O' wins return -1; else return 0."""
         matrices = self.extract_matrix(board, move)
         arrays = self.extract_arrays(board, move)
+        c = 0
+        for a in arrays:
+            c += self.evaluate_line(a)
+        return c
         print("CIAO")
+
+
+    def evaluate_line(self, arr):
+        fiveInRow = self.checkFiveInRow(arr)
+        fourInRow = self.checkFiveInRow(arr)
+        brokenFour = self.checkFiveInRow(arr)
+
+        return 100000 * fiveInRow + 5000 * fourInRow + 3000 * brokenFour;
+
+    def substrings(self, x, n):
+        return np.fromfunction(lambda i, j: x[i + j], (len(x) - n + 1, n),
+                                  dtype=int)
+    def checkFiveInRow(self, arr):
+        list = self.substrings(arr, 7)
+        for l in list:
+            if l == [0, 1, 1 ,1 ,1 ,1, 0]:
+                return 1
+
 
     def check_endgame(self, board, move, player):
         x, y = move  # coordinates of the last added stone

@@ -203,6 +203,65 @@ class Game:
         # self.black_turn = not self.black_turn
         self.draw()
 
+    # Da Aggiustare prima dell'uso
+    def check_endgame(self, board, move, player):
+        x, y = move  # coordinates of the last added stone
+        row_start = x - 5 if x - 5 > 0 else 0
+        col_start = y - 5 if y - 5 > 0 else 0
+        # Horizontal
+        count_stones = 0
+        for k in range(2 * 5 - 1):
+            if board[x][y + k] == player:
+                count_stones += 1
+            else:
+                count_stones = 0
+
+    # Si può eliminare
+    def k_in_row(self, board, move, player, delta_x_y):
+        # Check ends of game
+        count_r = count_c = count_d1 = count_d2 = 0
+        for i in range(self.size):
+            for j in range(self.size):
+
+                # Orizzontale
+                if board[i][j] == player:
+                    count_r += 1
+                    if count_r == 5:
+                        self.win()
+                else:
+                    count_r = 0
+
+                # Verticale
+                if board[j][i] == player:
+                    count_c += 1
+                    if count_c == 5:
+                        self.win()
+                else:
+                    count_c = 0
+
+                # Diagonale 1
+                if i + 5 < self.size and j + 5 < self.size:
+                    for k in range(5):
+                        if board[i + k][j + k] == player:
+                            count_d1 += 1
+                        else:
+                            count_d1 = 0
+                            break
+
+                    if count_d1 == 5:
+                        self.win()
+
+                if i + 5 < self.size and j - 5 < self.size:
+                    for k in range(5):
+                        if board[i + k][j - k] == player:
+                            count_d2 += 1
+                        else:
+                            count_d2 = 0
+                            break
+
+                    if count_d2 == 5:
+                        self.win()
+
     def end(self):
         # Check ends of game
         count_r = count_c = count_d1 = count_d2 = 0

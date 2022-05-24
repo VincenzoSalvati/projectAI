@@ -85,7 +85,7 @@ def alpha_beta_search(state, game):
     """Search game to determine best action; use alpha-beta pruning.
     As in [Figure 5.7], this version searches all the way to the leaves."""
 
-    player = game.to_move(state)
+    player = state.to_move
 
     # Functions used by alpha_beta
     def max_value(state, alpha, beta):
