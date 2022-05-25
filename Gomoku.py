@@ -1,12 +1,12 @@
 import itertools
 import sys
 from collections import namedtuple
+from threading import Thread
 
 import networkx as nx
 import numpy as np
 import pygame
 from pygame import gfxdraw
-from threading import Thread
 
 from TickTacToe.games import alpha_beta_player
 
@@ -168,12 +168,12 @@ class Gomoku:
         moves = [(x, y) for x in range(size)
                  for y in range(size)]
 
-        self.initial = GameState(to_move=PLAYER_BLACK, utility=0, board=self.board, moves=moves, branching=3)
+        self.initial = GameState(to_move=PLAYER_BLACK, utility=0, board=self.board, moves=moves, branching=2)
 
     def init_pygame(self):
         # Inizializza la partita
         pygame.init()
-        screen = pygame.display.set_mode((BOARD_WIDTH, BOARD_WIDTH), pygame.RESIZABLE)
+        screen = pygame.display.set_mode((BOARD_WIDTH, BOARD_WIDTH))
         self.screen = screen
         self.ZOINK = pygame.mixer.Sound("wav/zoink.wav")
         self.CLICK = pygame.mixer.Sound("wav/click.wav")
@@ -235,14 +235,18 @@ class Gomoku:
 
     def update(self):
         events = pygame.event.get()
+
         for event in events:
-            if event.type == pygame.MOUSEBUTTONUP:
-                self.handle_click()
             if event.type == pygame.QUIT:
+                pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_p:
                     self.pass_move()
+
+        if len(events) > 0:
+            if events[0].type == pygame.MOUSEBUTTONUP and self.black_turn:
+                self.handle_click()
 
     def extract_arrays(self, board):
         diag = []
@@ -275,23 +279,29 @@ class Gomoku:
     def evaluate_line(self, array):
 
         res = {}
-        t_fiveInRow = Thread(target=self.checkFiveInRow, args=(array, res))
-        t_fourInRow = Thread(target=self.checkFourInRow, args=(array, res))
-        t_brokenFour = Thread(target=self.checkBrokenFour, args=(array, res))
-        t_threeInRow = Thread(target=self.checkThreeInRow, args=(array, res))
-        t_brokenThree = Thread(target=self.checkBrokenThree, args=(array, res))
+        # t_fiveInRow = Thread(target=self.checkFiveInRow, args=(array, res))
+        # t_fourInRow = Thread(target=self.checkFourInRow, args=(array, res))
+        # t_brokenFour = Thread(target=self.checkBrokenFour, args=(array, res))
+        # t_threeInRow = Thread(target=self.checkThreeInRow, args=(array, res))
+        # t_brokenThree = Thread(target=self.checkBrokenThree, args=(array, res))
+        #
+        # t_fiveInRow.start()
+        # t_fourInRow.start()
+        # t_brokenFour.start()
+        # t_threeInRow.start()
+        # t_brokenThree.start()
+        #
+        # t_fiveInRow.join()
+        # t_fourInRow.join()
+        # t_brokenFour.join()
+        # t_threeInRow.join()
+        # t_brokenThree.join()
 
-        t_fiveInRow.start()
-        t_fourInRow.start()
-        t_brokenFour.start()
-        t_threeInRow.start()
-        t_brokenThree.start()
-
-        t_fiveInRow.join()
-        t_fourInRow.join()
-        t_brokenFour.join()
-        t_threeInRow.join()
-        t_brokenThree.join()
+        self.checkFiveInRow(array, res)
+        self.checkFourInRow(array, res)
+        self.checkBrokenFour(array, res)
+        self.checkThreeInRow(array, res)
+        self.checkBrokenThree(array, res)
 
         return 1000 * res["FiveInRow"] + \
                300 * res["FourInRow"] + \
@@ -367,6 +377,16 @@ class Gomoku:
 
         pygame.display.flip()
 
+    def update_game_range(self, x, y):
+        if self.x_min > x:
+            self.x_min = x
+        if self.x_max < x:
+            self.x_max = x
+        if self.y_min > y:
+            self.y_min = y
+        if self.y_max < y:
+            self.y_max = y
+
     def pass_move(self):
         self.black_turn = not self.black_turn
         self.draw()
@@ -382,65 +402,33 @@ class Gomoku:
             self.ZOINK.play()
             return
 
-        if self.x_min > col:
-            self.x_min = col
-        elif self.x_max < col:
-            self.x_max = col
+        # range game coordinates
+        self.update_game_range(col, row)
 
-        if self.y_min < row:
-            self.y_min = row
-        elif self.y_max > row:
-            self.y_max = row
-
-        # print(self.x_min)
-        # print(self.x_max)
-        # print(self.y_min)
-        # print(self.y_max)
-        # print(" ")
-
-        # update board array
-        self.board[col, row] = PLAYER_BLACK if self.black_turn else PLAYER_WHITE
-
-        # get stone groups for black and white
-        self_color = "black" if self.black_turn else "white"
-        other_color = "white" if self.black_turn else "black"
-
-        # change turns, draw stone and play sound
+        # draw stone, play sound, check end and pass move
+        self.board[col, row] = PLAYER_BLACK
         self.draw()
         self.CLICK.play()
+        self.end(PLAYER_BLACK, (col, row))
+        self.pass_move()
 
-        # self.end(PLAYER_BLACK, (col, row))
-
-        # Mossa del BOT
+        # BOT move
         state = GameState(to_move=PLAYER_WHITE,
                           utility=0,
                           board=self.board,
                           moves=self.compute_moves(self.board),
                           branching=3)
-        a, b = alpha_beta_player(game, state)
-        self.board[a, b] = PLAYER_WHITE
+        col_bot, row_bot = alpha_beta_player(game, state)
 
-        if self.x_min > a:
-            self.x_min = a
-        elif self.x_max < a:
-            self.x_max = a
+        # range game coordinates
+        self.update_game_range(col_bot, row_bot)
 
-        if self.y_min < b:
-            self.y_min = b
-        elif self.y_max > b:
-            self.y_max = b
-
-        # print(self.x_min)
-        # print(self.x_max)
-        # print(self.y_min)
-        # print(self.y_max)
-        # print(" ")
-
-        # change turns, draw stone and play sound
+        # draw stone, play sound, check end and pass move
+        self.board[col_bot, row_bot] = PLAYER_WHITE
         self.draw()
         self.CLICK.play()
-
-        # self.end(PLAYER_WHITE, (a, b))
+        self.end(PLAYER_WHITE, (col_bot, row_bot))
+        self.pass_move()
 
     def compute_moves(self, board):
 
@@ -459,95 +447,18 @@ class Gomoku:
                                       for y in range(self.size)]))
 
     def critical(self):
-        # Check ends of game
-        count_r = count_c = count_d1 = count_d2 = 0
-        adversarial = 1.0 if self.black_turn else 2.0
-        my_color = 2.0 if self.black_turn else 1.0
-        for i in range(self.size):
-            for j in range(self.size):
-
-                # Verticale
-                if self.board[i][j] == adversarial:
-                    count_r += 1
-                    if count_r == 4:
-                        if (i < 4 and self.board[i - 4][j] == 0):
-                            self.board[i - 4][j] = my_color
-                            return True
-                        elif (self.board[i + 1][j] == 0):
-                            self.board[i + 1][j] = my_color
-                            return True
-
-                else:
-                    count_r = 0
-
-                # Orizzontale
-                if self.board[j][i] == adversarial:
-                    count_c += 1
-                    if count_c == 4:
-                        if (j > 4 and self.board[j - 4][i] == 0):
-                            self.board[j - 4][i] = my_color
-                            return True
-                        elif (j + 1 < self.size and self.board[j + 1][i] == 0):
-                            self.board[j + 1][i] = my_color
-                            return True
-                else:
-                    count_c = 0
-
-                # Diagonale 1
-                if i + 5 < self.size and j + 5 < self.size:
-                    for k in range(4):
-                        if self.board[i + k][j + k] == adversarial:
-                            count_d1 += 1
-                        else:
-                            count_d1 = 0
-                            break
-
-                    if count_d1 == 4:
-                        if (i > 0 and j > 0 and self.board[i - 1][j - 1] == 0):
-                            self.board[i - 1][j - 1] = my_color
-                            return True
-                        elif (i + 4 < self.size and j + 4 < self.size and self.board[i + 4][j + 4] == 0):
-                            self.board[i + 4][j + 4] = my_color
-                            return True
-
-                if i + 5 < self.size and j - 5 < self.size:
-                    for k in range(4):
-                        if self.board[i + k][j - k] == adversarial:
-                            count_d2 += 1
-                        else:
-                            count_d2 = 0
-                            break
-
-                    if count_d2 == 4:
-                        if (i > 0 and j > 0 and self.board[i - 1][j - 1] == 0):
-                            self.board[i - 1][j - 1] = my_color
-                            return True
-                        elif (i < self.size - 1 and j < self.size - 1 and self.board[i + 1][j + 1] == 0):
-                            self.board[i + 1][j + 1] = my_color
-                            return True
-        return False
+        pass
 
     def end(self, player, move):
         # Check ends of game
-        # count_r = count_c = count_d1 = count_d2 = 0
-
-        # TODO: Restrict to neighbourhood of the last move
-        # lines = self.extract_arrays(np.pad(self.board, 1))
-        # opp = PLAYER_BLACK if player == PLAYER_BLACK else PLAYER_WHITE
-        # for line in lines:
-        #     substrings = self.substrings(line, 6)
-        #
-        #     for s in substrings:
-        #         if np.all(s == [opp, player, player, player, player, player, 0]) or \
-        #                 np.all(s == [0, player, player, player, player, player, 0]) or \
-        #                 np.all(s == [0, player, player, player, player, player, opp]) or \
-        #                 np.all(s == [opp, player, player, player, player, player, opp]):
-        #             self.win()
 
         x, y = move
+        x = x + 5
+        y = y + 5
         padded = np.pad(self.board, 5)
-        col_tagliata = padded[x - 5:x + 6, y]
-        row_tagliata = padded[x, y - 5:y + 6]
+
+        row_tagliata = padded[x - 5:x + 6, y]
+        col_tagliata = padded[x, y - 5:y + 6]
         diag = np.diag(padded[x - 5:x + 6, y - 5:y + 6])
         diag2 = np.diag(np.flip(padded[x - 5:x + 6, y - 5:y + 6], 1))
 
@@ -576,6 +487,7 @@ if __name__ == "__main__":
     game = Gomoku(15)
 
     game.init_pygame()
+
     game.draw()
 
     while True:
