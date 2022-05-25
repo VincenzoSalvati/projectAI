@@ -23,6 +23,7 @@ DOT_RADIUS = 4
 PLAYER_BLACK = 1
 PLAYER_WHITE = 2
 
+global game
 GameState = namedtuple('GameState', 'to_move, utility, board, moves, branching')
 
 
@@ -138,7 +139,7 @@ def get_stone_groups(board, color):
         List[List[Tuple[int, int]]]: list of list of (col, row) pairs, each defining a group
     """
     size = board.shape[0]
-    color_code = 1 if color == "black" else 2
+    color_code = PLAYER_BLACK if color == "black" else PLAYER_WHITE
     xs, ys = np.where(board == color_code)
     graph = nx.grid_graph(dim=[size, size])
     stones = set(zip(xs, ys))
@@ -356,20 +357,19 @@ class Gomoku:
             return
 
         # update board array
-        self.board[col, row] = 1 if self.black_turn else 2
+        self.board[col, row] = PLAYER_BLACK if self.black_turn else PLAYER_WHITE
 
         # get stone groups for black and white
         self_color = "black" if self.black_turn else "white"
         other_color = "white" if self.black_turn else "black"
 
-        self.end(PLAYER_BLACK, (col, row))
-        # change turns and draw screen
-        self.CLICK.play()
-        # self.black_turn = not self.black_turn
+        # change turns, draw stone and play sound
         self.draw()
+        self.CLICK.play()
+
+        #self.end(PLAYER_BLACK, (col, row))
 
         # Mossa del BOT
-        global game
         state = GameState(to_move=PLAYER_WHITE,
                           utility=0,
                           board=self.board,
@@ -378,11 +378,11 @@ class Gomoku:
         a, b = alpha_beta_player(game, state)
         self.board[a, b] = PLAYER_WHITE
 
-        # change turns and draw screen
-        self.CLICK.play()
-        # self.black_turn = not self.black_turn
+        # change turns, draw stone and play sound
         self.draw()
-        self.end(PLAYER_WHITE, (a, b))
+        self.CLICK.play()
+
+        #self.end(PLAYER_WHITE, (a, b))
 
     def compute_moves(self, board):
 
