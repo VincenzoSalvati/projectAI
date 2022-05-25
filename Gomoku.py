@@ -6,6 +6,7 @@ import networkx as nx
 import numpy as np
 import pygame
 from pygame import gfxdraw
+from threading import Thread
 
 from TickTacToe.games import alpha_beta_player
 
@@ -23,7 +24,6 @@ DOT_RADIUS = 4
 PLAYER_BLACK = 1
 PLAYER_WHITE = 2
 
-global game
 GameState = namedtuple('GameState', 'to_move, utility, board, moves, branching')
 
 
@@ -153,13 +153,20 @@ class Gomoku:
     def __init__(self, size, k=5):
 
         self.k = k
-        moves = [(x, y) for x in range(size)
-                 for y in range(size)]
+
+        # Where the game is getting involved
+        self.x_min = 16
+        self.x_max = -1
+        self.y_min = 16
+        self.y_max = -1
 
         self.board = np.zeros((size, size))
         self.size = size
         self.black_turn = True
         self.start_points, self.end_points = make_grid(self.size)
+
+        moves = [(x, y) for x in range(size)
+                 for y in range(size)]
 
         self.initial = GameState(to_move=PLAYER_BLACK, utility=0, board=self.board, moves=moves, branching=3)
 
@@ -266,35 +273,54 @@ class Gomoku:
         return score
 
     def evaluate_line(self, array):
-        fiveInRow = self.checkFiveInRow(array)
-        fourInRow = self.checkFourInRow(array)
-        brokenFour = self.checkBrokenFour(array)
-        threeInRow = self.checkThreeInRow(array)
-        brokenThree = self.checkBrokenThree(array)
-        return 1000 * fiveInRow + 300 * fourInRow + 200 * brokenFour + 75 * threeInRow + 60 * brokenThree
+
+        res = {}
+        t_fiveInRow = Thread(target=self.checkFiveInRow, args=(array, res))
+        t_fourInRow = Thread(target=self.checkFourInRow, args=(array, res))
+        t_brokenFour = Thread(target=self.checkBrokenFour, args=(array, res))
+        t_threeInRow = Thread(target=self.checkThreeInRow, args=(array, res))
+        t_brokenThree = Thread(target=self.checkBrokenThree, args=(array, res))
+
+        t_fiveInRow.start()
+        t_fourInRow.start()
+        t_brokenFour.start()
+        t_threeInRow.start()
+        t_brokenThree.start()
+
+        t_fiveInRow.join()
+        t_fourInRow.join()
+        t_brokenFour.join()
+        t_threeInRow.join()
+        t_brokenThree.join()
+
+        return 1000 * res["FiveInRow"] + \
+               300 * res["FourInRow"] + \
+               200 * res["BrokenFour"] + \
+               75 * res["ThreeInRow"] + \
+               60 * res["BrokenThree"]
 
     def subarray(self, array, length_subarray):
         return np.fromfunction(lambda i, j: array[i + j], (len(array) - length_subarray + 1, length_subarray),
                                dtype=int)
 
-    def checkFiveInRow(self, array):
+    def checkFiveInRow(self, array, res):
         lines = self.subarray(array, 5)
         count = 0
         for line in lines:
             if np.all(line == [1, 1, 1, 1, 1]):
                 count += 1
-        return count
+        res["FiveInRow"] = count
 
-    def checkFourInRow(self, array):
+    def checkFourInRow(self, array, res):
         lines = self.subarray(array, 5)
         count = 0
         for line in lines:
             if np.all(line == [0, 1, 1, 1, 1]) or \
                     np.all(line == [1, 1, 1, 1, 0]):
                 count += 1
-        return count
+        res["FourInRow"] = count
 
-    def checkBrokenFour(self, array):
+    def checkBrokenFour(self, array, res):
         lines = self.subarray(array, 5)
         count = 0
         for line in lines:
@@ -302,9 +328,9 @@ class Gomoku:
                     np.all(line == [1, 1, 1, 0, 1]) or \
                     np.all(line == [1, 0, 1, 1, 1]):
                 count += 1
-        return count
+        res["BrokenFour"] = count
 
-    def checkThreeInRow(self, array):
+    def checkThreeInRow(self, array, res):
         lines = self.subarray(array, 5)
         count = 0
         for line in lines:
@@ -312,9 +338,9 @@ class Gomoku:
                     np.all(line == [1, 1, 1, 0, 0]) or \
                     np.all(line == [0, 0, 1, 1, 1]):
                 count += 1
-        return count
+        res["ThreeInRow"] = count
 
-    def checkBrokenThree(self, array):
+    def checkBrokenThree(self, array, res):
         lines = self.subarray(array, 5)
         count = 0
         for line in lines:
@@ -323,7 +349,7 @@ class Gomoku:
                     np.all(line == [1, 1, 0, 1, 0]) or \
                     np.all(line == [1, 0, 1, 1, 0]):
                 count += 1
-        return count
+        res["BrokenThree"] = count
 
     def clear_screen(self):
 
@@ -356,6 +382,22 @@ class Gomoku:
             self.ZOINK.play()
             return
 
+        if self.x_min > col:
+            self.x_min = col
+        elif self.x_max < col:
+            self.x_max = col
+
+        if self.y_min < row:
+            self.y_min = row
+        elif self.y_max > row:
+            self.y_max = row
+
+        # print(self.x_min)
+        # print(self.x_max)
+        # print(self.y_min)
+        # print(self.y_max)
+        # print(" ")
+
         # update board array
         self.board[col, row] = PLAYER_BLACK if self.black_turn else PLAYER_WHITE
 
@@ -367,7 +409,7 @@ class Gomoku:
         self.draw()
         self.CLICK.play()
 
-        #self.end(PLAYER_BLACK, (col, row))
+        # self.end(PLAYER_BLACK, (col, row))
 
         # Mossa del BOT
         state = GameState(to_move=PLAYER_WHITE,
@@ -378,11 +420,27 @@ class Gomoku:
         a, b = alpha_beta_player(game, state)
         self.board[a, b] = PLAYER_WHITE
 
+        if self.x_min > a:
+            self.x_min = a
+        elif self.x_max < a:
+            self.x_max = a
+
+        if self.y_min < b:
+            self.y_min = b
+        elif self.y_max > b:
+            self.y_max = b
+
+        # print(self.x_min)
+        # print(self.x_max)
+        # print(self.y_min)
+        # print(self.y_max)
+        # print(" ")
+
         # change turns, draw stone and play sound
         self.draw()
         self.CLICK.play()
 
-        #self.end(PLAYER_WHITE, (a, b))
+        # self.end(PLAYER_WHITE, (a, b))
 
     def compute_moves(self, board):
 
@@ -516,8 +574,8 @@ class Gomoku:
 
 if __name__ == "__main__":
     game = Gomoku(15)
+
     game.init_pygame()
-    game.clear_screen()
     game.draw()
 
     while True:
