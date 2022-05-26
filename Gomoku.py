@@ -168,7 +168,7 @@ class Gomoku:
         moves = [(x, y) for x in range(size)
                  for y in range(size)]
 
-        self.initial = GameState(to_move=PLAYER_BLACK, utility=0, board=self.board, moves=moves, branching=2)
+        self.initial = GameState(to_move=PLAYER_BLACK, utility=0, board=self.board, moves=moves, branching=3)
 
     def init_pygame(self):
         # Inizializza la partita
@@ -240,14 +240,14 @@ class Gomoku:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_p:
-                    self.pass_move()
-                    self.bot_move()
 
         if len(events) > 0:
             if events[0].type == pygame.MOUSEBUTTONUP and self.black_turn:
                 self.handle_click()
+            if events[0].type == pygame.KEYUP and self.black_turn:
+                if events[0].key == pygame.K_p:
+                    self.pass_move()
+                    self.bot_move()
 
     def extract_arrays(self, board):
         diag = []
