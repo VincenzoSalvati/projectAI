@@ -243,6 +243,7 @@ class Gomoku:
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_p:
                     self.pass_move()
+                    self.bot_move()
 
         if len(events) > 0:
             if events[0].type == pygame.MOUSEBUTTONUP and self.black_turn:
@@ -394,24 +395,7 @@ class Gomoku:
     def to_move(self, state):
         return PLAYER_WHITE
 
-    def handle_click(self):
-        # get board position
-        x, y = pygame.mouse.get_pos()
-        col, row = xy_to_colrow(x, y, self.size)
-        if not is_valid_move(col, row, self.board):
-            self.ZOINK.play()
-            return
-
-        # range game coordinates
-        self.update_game_range(col, row)
-
-        # draw stone, play sound, check end and pass move
-        self.board[col, row] = PLAYER_BLACK
-        self.draw()
-        self.CLICK.play()
-        self.end(PLAYER_BLACK, (col, row))
-        self.pass_move()
-
+    def bot_move(self):
         # BOT move
         state = GameState(to_move=PLAYER_WHITE,
                           utility=0,
@@ -425,10 +409,27 @@ class Gomoku:
 
         # draw stone, play sound, check end and pass move
         self.board[col_bot, row_bot] = PLAYER_WHITE
-        self.draw()
         self.CLICK.play()
         self.end(PLAYER_WHITE, (col_bot, row_bot))
         self.pass_move()
+
+    def handle_click(self):
+        # get board position
+        x, y = pygame.mouse.get_pos()
+        col, row = xy_to_colrow(x, y, self.size)
+        if not is_valid_move(col, row, self.board):
+            self.ZOINK.play()
+            return
+
+        # range game coordinates
+        self.update_game_range(col, row)
+
+        # draw stone, play sound, check end and pass move
+        self.board[col, row] = PLAYER_BLACK
+        self.CLICK.play()
+        self.end(PLAYER_BLACK, (col, row))
+        self.pass_move()
+        self.bot_move()
 
     def compute_moves(self, board):
 
@@ -451,7 +452,6 @@ class Gomoku:
 
     def end(self, player, move):
         # Check ends of game
-
         x, y = move
         x = x + 5
         y = y + 5
@@ -485,11 +485,9 @@ class Gomoku:
 
 if __name__ == "__main__":
     game = Gomoku(15)
-
     game.init_pygame()
 
-    game.draw()
-
     while True:
+        game.draw()
         game.update()
         pygame.time.wait(100)
