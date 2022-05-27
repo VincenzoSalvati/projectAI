@@ -321,21 +321,34 @@ class Gomoku:
     def evaluate_line(self, array):
         lines = self.subarray(array, 5)
 
-        # Offensive at the beginning or when there are no combinations greater than 2
+        # Offensive at the beginning or when there are no combinations greater than 2-patterns
 
-        # Defensive as far as patterns of 3 and 4 are concerned (however,
-        # 3-patterns must be generated to put the opponent in difficulty,
-        # hence their weight is not too much smaller than 4-patterns)
+        # Defensive as far as patterns of 3 and 4 are concerned.
+        # However, 3-patterns must be generated to put the opponent in difficulty,
+        # hence their weight is not too much smaller than 4-patterns... except for defence
 
-        # Broken-pattern are worth less then Row-pattern because you can win with just one move and, in addition to
+        # Broken-pattern are worth less than Row-pattern because you can win with just one move and, in addition to
         # that, such patterns are easily spotted on a chessboard
 
-        # Victory must be both taken and defended and must be worth much more than other combinations
-        return (self.check_five_in_row(lines, 1) * 3 - self.check_five_in_row(lines, 2) * 3) + \
-               (self.check_four_in_row(lines, 1) * 1.3 - self.check_four_in_row(lines, 2) * 1.2) + \
-               (self.check_broken_four(lines, 1) * 1.1 - self.check_broken_four(lines, 2) * 1) + \
-               (self.check_three_in_row(lines, 1) * 0.85 - self.check_three_in_row(lines, 2) * 0.75) + \
-               (self.check_broken_three(lines, 1) * 0.65 - self.check_broken_three(lines, 2) * 0.55) + \
+        # Victory must be both taken (for itself) and avoided (for the opponent) and must be worth much more than
+        # other combinations
+
+        # Weaknesses:
+        # 1.Does not pay attention to sequences longer than 5 stones (both for himself and for the opponent)
+        # 2.Does not elaborate complicated strategies on purpose (e.g. special patterns)
+
+        # Strengths:
+        # 1.He is alarmed in situations of at least 5 consecutive stones (both for himself and for the opponent)
+        # 2.A high value of 3-patterns and 4-patterns gives more chances to generate advantageous situations for
+        # itself, but, at the same time, it prefers blocking the generation of such situations
+        # by the opponent (even if only slightly)
+        # 3. It continues his attack strategy without being fooled by single opposing stones located far from
+        # the masses
+        return (self.check_five_in_row(lines, 1) * 12 - self.check_five_in_row(lines, 2) * 12) + \
+               (self.check_four_in_row(lines, 1) * 5.2 - self.check_four_in_row(lines, 2) * 3.2) + \
+               (self.check_broken_four(lines, 1) * 5 - self.check_broken_four(lines, 2) * 3.1) + \
+               (self.check_three_in_row(lines, 1) * 1.65 - self.check_three_in_row(lines, 2) * 0.95) + \
+               (self.check_broken_three(lines, 1) * 1.55 - self.check_broken_three(lines, 2) * 0.85) + \
                (self.check_two_in_row(lines, 1) * 0.02 - self.check_two_in_row(lines, 2) * 0.2) + \
                (self.check_broken_two(lines, 1) * 0.02 - self.check_broken_two(lines, 2) * 0.2) + \
                (self.check_one(lines, 1) * 0.001 - self.check_one(lines, 2) * 0.01)
@@ -385,10 +398,10 @@ class Gomoku:
 
     def win(self):
         # TODO: Win
-        time.sleep(1)
+        time.sleep(5)
         self.stop_drawing = True
-        # pygame.quit()
-        # sys.exit()
+        pygame.quit()
+        sys.exit()
 
     def bot_move(self):
         state = GameState(to_move=(PLAYER_BLACK if self.black_turn else PLAYER_WHITE),
@@ -498,7 +511,7 @@ class Gomoku:
 def update_screen():
     while True:
         game.draw()
-        time.sleep(0.3)
+        time.sleep(0.5)
         if game.stop_drawing:
             break
 
