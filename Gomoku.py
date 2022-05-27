@@ -238,106 +238,107 @@ class Gomoku:
                                  dtype=int)]
 
     @staticmethod
-    def check_five_in_row(lines, res):
+    def check_five_in_row(lines, player):
         count = 0
         for line in lines:
-            if np.all(line == [1, 1, 1, 1, 1]):
+            if np.all(line == [player, player, player, player, player]):
                 count += 1
-        res["FiveInRow"] = count
+        return count
 
     @staticmethod
-    def check_four_in_row(lines, res):
+    def check_four_in_row(lines, player):
         count = 0
         for line in lines:
-            if np.all(line == [0, 1, 1, 1, 1]) or \
-                    np.all(line == [1, 1, 1, 1, 0]):
+            if np.all(line == [0, player, player, player, player]) or \
+                    np.all(line == [player, player, player, player, 0]):
                 count += 1
-        res["FourInRow"] = count
+        return count
 
     @staticmethod
-    def check_broken_four(lines, res):
+    def check_broken_four(lines, player):
         count = 0
         for line in lines:
-            if np.all(line == [1, 0, 1, 1, 1]) or \
-                    np.all(line == [1, 1, 0, 1, 1]) or \
-                    np.all(line == [1, 1, 1, 0, 1]):
+            if np.all(line == [player, 0, player, player, player]) or \
+                    np.all(line == [player, player, 0, player, player]) or \
+                    np.all(line == [player, player, player, 0, player]):
                 count += 1
-        res["BrokenFour"] = count
+        return count
 
     @staticmethod
-    def check_three_in_row(lines, res):
+    def check_three_in_row(lines, player):
         count = 0
         for line in lines:
-            if np.all(line == [1, 1, 1, 0, 0]) or \
-                    np.all(line == [0, 1, 1, 1, 0]) or \
-                    np.all(line == [0, 0, 1, 1, 1]):
+            if np.all(line == [player, player, player, 0, 0]) or \
+                    np.all(line == [0, player, player, player, 0]) or \
+                    np.all(line == [0, 0, player, player, player]):
                 count += 1
-        res["ThreeInRow"] = count
+        return count
 
     @staticmethod
-    def check_broken_three(lines, res):
+    def check_broken_three(lines, player):
         count = 0
         for line in lines:
-            if np.all(line == [1, 0, 1, 1, 0]) or \
-                    np.all(line == [0, 1, 0, 1, 1]) or \
-                    np.all(line == [1, 1, 0, 1, 0]) or \
-                    np.all(line == [0, 1, 1, 0, 1]):
+            if np.all(line == [player, 0, player, player, 0]) or \
+                    np.all(line == [0, player, 0, player, player]) or \
+                    np.all(line == [player, player, 0, player, 0]) or \
+                    np.all(line == [0, player, player, 0, player]):
                 count += 1
-        res["BrokenThree"] = count
+        return count
 
     @staticmethod
-    def check_two_in_row(lines, res):
+    def check_two_in_row(lines, player):
         count = 0
         for line in lines:
-            if np.all(line == [1, 1, 0, 0, 0]) or \
-                    np.all(line == [0, 1, 1, 0, 0]) or \
-                    np.all(line == [0, 0, 1, 1, 0]) or \
-                    np.all(line == [0, 0, 0, 1, 1]):
+            if np.all(line == [player, player, 0, 0, 0]) or \
+                    np.all(line == [0, player, player, 0, 0]) or \
+                    np.all(line == [0, 0, player, player, 0]) or \
+                    np.all(line == [0, 0, 0, player, player]):
                 count += 1
-        res["TwoInRow"] = count
+        return count
 
     @staticmethod
-    def check_broken_two(lines, res):
+    def check_broken_two(lines, player):
         count = 0
         for line in lines:
-            if np.all(line == [1, 0, 1, 0, 0]) or \
-                    np.all(line == [0, 1, 0, 1, 0]) or \
-                    np.all(line == [0, 0, 1, 0, 1]):
+            if np.all(line == [player, 0, player, 0, 0]) or \
+                    np.all(line == [0, player, 0, player, 0]) or \
+                    np.all(line == [0, 0, player, 0, player]):
                 count += 1
-        res["BrokenTwo"] = count
+        return count
 
     @staticmethod
-    def check_one(lines, res):
+    def check_one(lines, player):
         count = 0
         for line in lines:
-            if np.all(line == [1, 0, 0, 0, 0]) or \
-                    np.all(line == [0, 1, 0, 0, 0]) or \
-                    np.all(line == [0, 0, 1, 0, 0]) or \
-                    np.all(line == [0, 0, 0, 1, 0]) or \
-                    np.all(line == [0, 0, 0, 0, 1]):
+            if np.all(line == [player, 0, 0, 0, 0]) or \
+                    np.all(line == [0, player, 0, 0, 0]) or \
+                    np.all(line == [0, 0, player, 0, 0]) or \
+                    np.all(line == [0, 0, 0, player, 0]) or \
+                    np.all(line == [0, 0, 0, 0, player]):
                 count += 1
-        res["Ones"] = count
+        return count
 
     def evaluate_line(self, array):
         lines = self.subarray(array, 5)
-        count_dict = {}
 
-        self.check_five_in_row(lines, count_dict)
-        self.check_four_in_row(lines, count_dict)
-        self.check_broken_four(lines, count_dict)
-        self.check_three_in_row(lines, count_dict)
-        self.check_broken_three(lines, count_dict)
-        self.check_two_in_row(lines, count_dict)
-        self.check_broken_two(lines, count_dict)
-        self.check_one(lines, count_dict)
+        # Offensive at the beginning or when there are no combinations greater than 2
 
-        return 1 * count_dict["FiveInRow"] + \
-               0.6 * count_dict["FourInRow"] + \
-               0.6 * count_dict["BrokenFour"] + \
-               0.3 * count_dict["ThreeInRow"] + \
-               0.3 * count_dict["BrokenThree"] + \
-               0.05 * count_dict["TwoInRow"] + \
-               0.001 * count_dict["Ones"]
+        # Defensive as far as patterns of 3 and 4 are concerned (however,
+        # 3-patterns must be generated to put the opponent in difficulty,
+        # hence their weight is not too much smaller than 4-patterns)
+
+        # Broken-pattern are worth less then Row-pattern because you can win with just one move and, in addition to
+        # that, such patterns are easily spotted on a chessboard
+
+        # Victory must be both taken and defended and must be worth much more than other combinations
+        return (self.check_five_in_row(lines, 1) * 3 - self.check_five_in_row(lines, 2) * 3) + \
+               (self.check_four_in_row(lines, 1) * 1.3 - self.check_four_in_row(lines, 2) * 1.2) + \
+               (self.check_broken_four(lines, 1) * 1.1 - self.check_broken_four(lines, 2) * 1) + \
+               (self.check_three_in_row(lines, 1) * 0.85 - self.check_three_in_row(lines, 2) * 0.75) + \
+               (self.check_broken_three(lines, 1) * 0.65 - self.check_broken_three(lines, 2) * 0.55) + \
+               (self.check_two_in_row(lines, 1) * 0.02 - self.check_two_in_row(lines, 2) * 0.2) + \
+               (self.check_broken_two(lines, 1) * 0.02 - self.check_broken_two(lines, 2) * 0.2) + \
+               (self.check_one(lines, 1) * 0.001 - self.check_one(lines, 2) * 0.01)
 
     def compute_utility(self, board):
         arrays = self.extract_arrays(board)
@@ -384,41 +385,27 @@ class Gomoku:
 
     def win(self):
         # TODO: Win
+        time.sleep(1)
         self.stop_drawing = True
-        pygame.quit()
-        sys.exit()
-        pass
-
-    def critical(self, player):
-        for array in self.extract_arrays(self.board):
-            for line in self.subarray(array, 5):
-                if np.all(line == [0, player, player, player, player]) or \
-                        np.all(line == [player, player, player, player, 0]) or \
-                        np.all(line == [player, 0, player, player, player]) or \
-                        np.all(line == [player, player, 0, player, player]) or \
-                        np.all(line == [player, player, player, 0, player]):
-                    # TODO: potrebbe vincere anche con una fila più lunga di 5
-                    self.win()
-                    return True
-        return False
+        # pygame.quit()
+        # sys.exit()
 
     def bot_move(self):
-        if not self.critical(PLAYER_BLACK if self.black_turn else PLAYER_WHITE):
-            state = GameState(to_move=(PLAYER_BLACK if self.black_turn else PLAYER_WHITE),
-                              utility=0,
-                              board=self.board,
-                              moves=self.compute_moves(self.board),
-                              branching=3)
-            col_bot, row_bot = alpha_beta_search(game, state)
+        state = GameState(to_move=(PLAYER_BLACK if self.black_turn else PLAYER_WHITE),
+                          utility=0,
+                          board=self.board,
+                          moves=self.compute_moves(self.board),
+                          branching=3)
+        col_bot, row_bot = alpha_beta_search(game, state)
 
-            # range game coordinates
-            self.update_game_range(col_bot, row_bot)
+        # range game coordinates
+        self.update_game_range(col_bot, row_bot)
 
-            # draw stone, play sound, check end and pass move
-            self.board[col_bot, row_bot] = PLAYER_WHITE
-            self.RIGHT_CLICK.play()
-            self.end(PLAYER_WHITE, (col_bot, row_bot))
-            self.pass_move()
+        # draw stone, play sound, check end and pass move
+        self.board[col_bot, row_bot] = PLAYER_WHITE
+        self.RIGHT_CLICK.play()
+        self.end(PLAYER_WHITE, (col_bot, row_bot))
+        self.pass_move()
 
     def is_valid_move(self, col, row):
         if col < 0 or col >= self.size:
@@ -511,7 +498,7 @@ class Gomoku:
 def update_screen():
     while True:
         game.draw()
-        time.sleep(0.2)
+        time.sleep(0.3)
         if game.stop_drawing:
             break
 
