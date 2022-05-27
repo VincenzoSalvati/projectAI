@@ -397,6 +397,7 @@ class Gomoku:
                         np.all(line == [player, 0, player, player, player]) or \
                         np.all(line == [player, player, 0, player, player]) or \
                         np.all(line == [player, player, player, 0, player]):
+                    # TODO: potrebbe vincere anche con una fila più lunga di 5
                     self.win()
                     return True
         return False
