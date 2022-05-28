@@ -279,7 +279,9 @@ class Gomoku:
         count = 0
         for line in lines:
             if np.all(line == [player, 0, player, player, 0]) or \
+                    np.all(line == [player, 0, 0, player, player]) or \
                     np.all(line == [0, player, 0, player, player]) or \
+                    np.all(line == [player, player, 0, 0, player]) or \
                     np.all(line == [player, player, 0, player, 0]) or \
                     np.all(line == [0, player, player, 0, player]):
                 count += 1
@@ -301,7 +303,10 @@ class Gomoku:
         count = 0
         for line in lines:
             if np.all(line == [player, 0, player, 0, 0]) or \
+                    np.all(line == [player, 0, 0, player, 0]) or \
+                    np.all(line == [player, 0, 0, 0, player]) or \
                     np.all(line == [0, player, 0, player, 0]) or \
+                    np.all(line == [0, player, 0, 0, player]) or \
                     np.all(line == [0, 0, player, 0, player]):
                 count += 1
         return count
