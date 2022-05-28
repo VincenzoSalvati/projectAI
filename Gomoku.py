@@ -352,7 +352,7 @@ class Gomoku:
         return (self.check_five_in_row(lines, 1) * 12 - self.check_five_in_row(lines, 2) * 12) + \
                (self.check_four_in_row(lines, 1) * 5.2 - self.check_four_in_row(lines, 2) * 3.2) + \
                (self.check_broken_four(lines, 1) * 5 - self.check_broken_four(lines, 2) * 3.1) + \
-               (self.check_three_in_row(lines, 1) * 1.65 - self.check_three_in_row(lines, 2) * 0.95) + \
+               (self.check_three_in_row(lines, 1) * 2.15 - self.check_three_in_row(lines, 2) * 0.95) + \
                (self.check_broken_three(lines, 1) * 1.55 - self.check_broken_three(lines, 2) * 0.85) + \
                (self.check_two_in_row(lines, 1) * 0.02 - self.check_two_in_row(lines, 2) * 0.2) + \
                (self.check_broken_two(lines, 1) * 0.02 - self.check_broken_two(lines, 2) * 0.2) + \
