@@ -413,7 +413,7 @@ class Gomoku:
                           utility=0,
                           board=self.board,
                           moves=self.compute_moves(self.board),
-                          branching=3)
+                          branching=4)
         col_bot, row_bot = alpha_beta_search(game, state)
 
         # range game coordinates
