@@ -1,7 +1,9 @@
 import itertools
+import random
 import sys
 import threading
 import time
+from tkinter import messagebox
 
 import numpy as np
 import pygame
@@ -132,24 +134,26 @@ class BoardGomoku:
                 else:
                     count_stones = 0
             if count_stones == 5:
-                self.win()
+                self.win(player)
             else:
                 count_stones = 0
 
-    def win(self):
-        # TODO: Win
-        time.sleep(5)
+    def win(self, player):
+        messagebox.showinfo('Game over', "The winner is: " f"{'BLACK!!' if player == PLAYER_BLACK else 'WHITE!!'}")
         self.stop_drawing = True
         pygame.quit()
         sys.exit()
 
-    def request_move(self, ai):
-        col, row = ai.bot_move(self.board)
+    def request_move(self, bot_gomoku):
+        if np.count_nonzero(self.board) == 0:
+            col, row = random.randint(0, self.size), random.randint(0, self.size)
+        else:
+            col, row = bot_gomoku.bot_move(self.board)
 
         # draw stone, play sound, check end and pass move
-        self.board[col, row] = ai.get_color()
+        self.board[col, row] = bot_gomoku.get_color()
         self.RIGHT_CLICK.play()
-        self.end(ai.get_color(), (col, row))
+        self.end(bot_gomoku.get_color(), (col, row))
         self.change_turn()
 
     def is_valid_move(self, col, row):
@@ -283,7 +287,6 @@ def play_PC_VS_PC():
     bot_black = BotGomoku(PLAYER_BLACK)
     bot_white = BotGomoku(PLAYER_WHITE)
 
-    board_gomoku.board[7, 7] = PLAYER_BLACK
     while True:
         board_gomoku.request_move(bot_black)
         board_gomoku.request_move(bot_white)
@@ -317,7 +320,7 @@ def update_home(screen, list_buttons):
                             play_Player_VS_PC()
                         elif button.text == "Player VS Player":
                             play_Player_VS_Player()
-                        elif button.text == "PC vs PC":
+                        elif button.text == "PC VS PC":
                             play_PC_VS_PC()
                         else:
                             exit()

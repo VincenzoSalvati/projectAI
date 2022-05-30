@@ -52,13 +52,9 @@ class BotGomoku:
             else:
                 return False
 
-        x = set(filter(filtering, [(x, y)
-                                   for x in range(board.shape[0])
-                                   for y in range(board.shape[1])]))
-        x = (list(x))
-        random.shuffle(x)
-
-        return set(x)
+        return set(filter(filtering, [(x, y)
+                                      for x in range(board.shape[0])
+                                      for y in range(board.shape[1])]))
 
     def result(self, state, move):
         if move not in state.moves:
