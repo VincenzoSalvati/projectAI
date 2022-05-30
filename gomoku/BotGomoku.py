@@ -3,7 +3,7 @@ from collections import namedtuple
 
 import numpy as np
 
-from gomoku.algorithm import alpha_beta_search
+from gomoku.AlphaBetaPruning import alpha_beta_search
 
 GameState = namedtuple('GameState', 'to_move, utility, board, moves, branching')
 
@@ -11,25 +11,18 @@ PLAYER_BLACK = 1
 PLAYER_WHITE = 2
 
 
-class AI_Gomoku:
+# noinspection PyShadowingNames
+class BotGomoku:
     def __init__(self, color, k=5):
         self.myColor = color
         self.opponent = PLAYER_BLACK if color == PLAYER_WHITE else PLAYER_WHITE
         self.length_victory = k
-        # moves = [(x, y)
-        #          for x in range(self.size)
-        #          for y in range(self.size)]
-        #
-        # self.initial = GameState(to_move=(PLAYER_BLACK if self.black_turn else PLAYER_WHITE),
-        #                          utility=0,
-        #                          board=self.board,
-        #                          moves=moves,
-        #                          branching=3)
 
     def get_color(self):
         return self.myColor
 
-    def actions(self, state):
+    @staticmethod
+    def actions(state):
         """Legal moves are any square not yet taken."""
         return state.moves
 
@@ -37,15 +30,18 @@ class AI_Gomoku:
         """Return the value to player; 1 for win, -1 for loss, 0 otherwise."""
         return state.utility if player == self.opponent else -state.utility
 
-    def terminal_test(self, state):
+    @staticmethod
+    def terminal_test(state):
         """A state is terminal if it is won or there are no empty squares."""
         return state.utility != 0 or len(state.moves) == 0 or state.branching == 0
 
-    def to_move(self, state):
+    @staticmethod
+    def to_move(state):
         """Return the player whose move it is in this state."""
         return state.to_move
 
-    def compute_moves(self, board):
+    @staticmethod
+    def compute_moves(board):
 
         def filtering(coordinates):
             x, y = coordinates
@@ -218,19 +214,20 @@ class AI_Gomoku:
         # by the opponent (even if only slightly)
         # 3. It continues his attack strategy without being fooled by single opposing stones located far from
         # the masses
+        # noinspection PyPep8
         return self.check_five_in_row(opp_lines, self.opponent) * 12 - self.check_five_in_row(my_lines,
                                                                                               self.myColor) * 12 + \
                self.check_four_in_row(opp_lines, self.opponent) * 5.2 - self.check_four_in_row(my_lines,
                                                                                                self.myColor) * 3.2 + \
                self.check_broken_four(opp_lines, self.opponent) * 5.2 - self.check_broken_four(my_lines,
-                                                                                             self.myColor) * 3.2 + \
+                                                                                               self.myColor) * 3.2 + \
                self.check_three_in_row(opp_lines, self.opponent) * 2.15 - self.check_three_in_row(my_lines,
                                                                                                   self.myColor) * .95 + \
                self.check_broken_three(opp_lines, self.opponent) * 1.55 - self.check_broken_three(my_lines,
                                                                                                   self.myColor) * .85 + \
                self.check_two_in_row(lines, self.opponent) * .02 - self.check_two_in_row(lines, self.myColor) * .2 + \
-               self.check_broken_two(lines, self.opponent) * .02 - self.check_broken_two(lines, self.myColor) * .2
-        # self.check_one(lines, self.opponent) * .01 - self.check_one(lines, self.myColor) * .01
+               self.check_broken_two(lines, self.opponent) * .02 - self.check_broken_two(lines, self.myColor) * .2 + \
+               self.check_one(lines, self.opponent) * .01 - self.check_one(lines, self.myColor) * .01
 
     def compute_utility(self, board):
         arrays = self.extract_arrays(board)
