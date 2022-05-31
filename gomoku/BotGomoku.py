@@ -14,28 +14,30 @@ PLAYER_WHITE = 2
 class BotGomoku:
     def __init__(self, color, k=5):
         self.myColor = color
-        self.opponent = PLAYER_BLACK if color == PLAYER_WHITE else PLAYER_WHITE
+        self.oppColor = PLAYER_BLACK if color == PLAYER_WHITE else PLAYER_WHITE
         self.length_victory = k
+
+        self.main_heuristic = True
 
     def get_color(self):
         return self.myColor
 
     def set_color(self, color):
         self.myColor = color
-        self.opponent = PLAYER_BLACK if color == PLAYER_WHITE else PLAYER_WHITE
+        self.oppColor = PLAYER_WHITE if color == PLAYER_BLACK else PLAYER_BLACK
 
     @staticmethod
     def actions(state):
         """Legal moves are any square not yet taken."""
         return state.moves
 
-    def utility(self, state, player):
+    @staticmethod
+    def utility(state):
         return state.utility
 
     @staticmethod
     def terminal_test(state):
-        """A state is terminal if it is won or there are no empty squares."""
-        return state.utility != 0 or len(state.moves) == 0 or state.branching == 0
+        return len(state.moves) == 0 or state.branching == 0
 
     @staticmethod
     def to_move(state):
@@ -69,7 +71,7 @@ class BotGomoku:
         player = (PLAYER_BLACK if state.to_move == PLAYER_WHITE else PLAYER_WHITE)
 
         return GameState(to_move=player,
-                         utility=self.compute_utility(board, player),
+                         utility=self.compute_utility(board),
                          board=board,
                          moves=moves,
                          branching=state.branching - 1)
@@ -182,13 +184,13 @@ class BotGomoku:
                 count += 1
         return count
 
-    def evaluate_line_black(self, array):
+    def compare_evaluate_line(self, array):
         lines = np.array(self.subarray(array, 5))
+        lines = lines[np.count_nonzero(lines, axis=1) > 1]
+        myLines = lines[np.count_nonzero(lines != self.oppColor, axis=1) == 5]
+        oppLines = lines[np.count_nonzero(lines != self.myColor, axis=1) == 5]
 
-        my_lines = lines[np.count_nonzero(lines == self.myColor, axis=1) >= 1]
-        opp_lines = lines[np.count_nonzero(lines == self.opponent, axis=1) >= 1]
-
-        if len(my_lines) == 0 and len(opp_lines) == 0:
+        if len(myLines) == 0 and len(oppLines) == 0:
             return 0
 
         # Offensive at the beginning or when there are no combinations greater than 2-patterns
@@ -214,27 +216,26 @@ class BotGomoku:
         # by the opponent (even if only slightly)
         # 3. It continues his attack strategy without being fooled by single opposing stones located far from
         # the masses
-        return self.check_five_in_row(my_lines, self.myColor) * 12 - self.check_five_in_row(opp_lines,
-                                                                                            self.opponent) * 12 + \
-               self.check_four_in_row(my_lines, self.myColor) * 3.2 - self.check_four_in_row(opp_lines,
-                                                                                             self.opponent) * 5.2 + \
-               self.check_broken_four(my_lines, self.myColor) * 3.1 - self.check_broken_four(opp_lines,
-                                                                                             self.opponent) * 5 + \
-               self.check_three_in_row(my_lines, self.myColor) * 0.95 - self.check_three_in_row(opp_lines,
-                                                                                                self.opponent) * 2.15 + \
-               self.check_broken_three(my_lines, self.myColor) * 0.85 - self.check_broken_three(opp_lines,
-                                                                                                self.opponent) * 1.55 + \
-               self.check_two_in_row(lines, self.myColor) * .02 - self.check_two_in_row(lines, self.opponent) * .02 + \
-               self.check_broken_two(lines, self.myColor) * .02 - self.check_broken_two(lines, self.opponent) * .02
-        # self.check_one(lines, self.opponent) * .001 - self.check_one(lines, self.myColor) * .01
+        return self.check_five_in_row(myLines, self.myColor) * 20 - self.check_five_in_row(oppLines,
+                                                                                           self.oppColor) * 20 + \
+               self.check_four_in_row(myLines, self.myColor) * 5.3 - self.check_four_in_row(oppLines,
+                                                                                            self.oppColor) * 8.7 + \
+               self.check_broken_four(myLines, self.myColor) * 5.2 - self.check_broken_four(oppLines,
+                                                                                            self.oppColor) * 8.3 + \
+               self.check_three_in_row(myLines, self.myColor) * 1.6 - self.check_three_in_row(oppLines,
+                                                                                              self.oppColor) * 3.6 + \
+               self.check_broken_three(myLines, self.myColor) * 1.4 - self.check_broken_three(oppLines,
+                                                                                              self.oppColor) * 2.6 + \
+               self.check_two_in_row(myLines, self.myColor) * 1 - self.check_two_in_row(oppLines, self.oppColor) * .5 + \
+               self.check_broken_two(myLines, self.myColor) * 1 - self.check_broken_two(oppLines, self.oppColor) * .5
 
-    def evaluate_line_white(self, array):
+    def main_evaluate_line(self, array):
         lines = np.array(self.subarray(array, 5))
+        lines = lines[np.count_nonzero(lines, axis=1) > 1]
+        myLines = lines[np.count_nonzero(lines != self.oppColor, axis=1) == 5]
+        oppLines = lines[np.count_nonzero(lines != self.myColor, axis=1) == 5]
 
-        my_lines = lines[np.count_nonzero(lines == self.myColor, axis=1) >= 1]
-        opp_lines = lines[np.count_nonzero(lines == self.opponent, axis=1) >= 1]
-
-        if len(my_lines) == 0 and len(opp_lines) == 0:
+        if len(myLines) == 0 and len(oppLines) == 0:
             return 0
 
         # Offensive at the beginning or when there are no combinations greater than 2-patterns
@@ -261,28 +262,27 @@ class BotGomoku:
         # 3. It continues his attack strategy without being fooled by single opposing stones located far from
         # the masses
         # noinspection PyPep8
-        return self.check_five_in_row(my_lines, self.myColor) * 20 - self.check_five_in_row(opp_lines,
-                                                                                            self.opponent) * 20 + \
-               self.check_four_in_row(my_lines, self.myColor) * 6 - self.check_four_in_row(opp_lines,
-                                                                                           self.opponent) * 15 + \
-               self.check_broken_four(my_lines, self.myColor) * 4.5 - self.check_broken_four(opp_lines,
-                                                                                             self.opponent) * 14 + \
-               self.check_three_in_row(my_lines, self.myColor) * 4 - self.check_three_in_row(opp_lines,
-                                                                                             self.opponent) * 8 + \
-               self.check_broken_three(my_lines, self.myColor) * 2.5 - self.check_broken_three(opp_lines,
-                                                                                               self.opponent) * 7 + \
-               self.check_two_in_row(lines, self.myColor) * .3 - self.check_two_in_row(lines, self.opponent) * .03 + \
-               self.check_broken_two(lines, self.myColor) * .3 - self.check_broken_two(lines, self.opponent) * .03
-        # self.ines, self.myColor) * .1
+        return self.check_five_in_row(myLines, self.myColor) * 22 - self.check_five_in_row(oppLines,
+                                                                                           self.oppColor) * 22 + \
+               self.check_four_in_row(myLines, self.myColor) * 10 - self.check_four_in_row(oppLines,
+                                                                                           self.oppColor) * 10 + \
+               self.check_broken_four(myLines, self.myColor) * 8 - self.check_broken_four(oppLines,
+                                                                                          self.oppColor) * 8 + \
+               self.check_three_in_row(myLines, self.myColor) * 3 - self.check_three_in_row(oppLines,
+                                                                                            self.oppColor) * 3 + \
+               self.check_broken_three(myLines, self.myColor) * 2 - self.check_broken_three(oppLines,
+                                                                                            self.oppColor) * 2 + \
+               self.check_two_in_row(lines, self.myColor) * 1 - self.check_two_in_row(lines, self.oppColor) * .5 + \
+               self.check_broken_two(lines, self.myColor) * 1 - self.check_broken_two(lines, self.oppColor) * .5
 
-    def compute_utility(self, board, player):
+    def compute_utility(self, board):
         arrays = self.extract_arrays(board)
         score = 0
         for array in arrays:
-            if player == PLAYER_BLACK:
-                score += self.evaluate_line_black(array)
+            if self.main_heuristic:
+                score += self.main_evaluate_line(array)
             else:
-                score += self.evaluate_line_white(array)
+                score += self.compare_evaluate_line(array)
         return score
 
     def bot_move(self, board):
@@ -290,5 +290,5 @@ class BotGomoku:
                           utility=0,
                           board=board,
                           moves=self.compute_moves(board),
-                          branching=3)
+                          branching=2)
         return alpha_beta_search(self, state)
