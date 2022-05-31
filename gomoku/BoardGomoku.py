@@ -3,7 +3,7 @@ import random
 import sys
 import threading
 import time
-from tkinter import messagebox
+from tkinter import messagebox, Tk
 
 import numpy as np
 import pygame
@@ -139,6 +139,7 @@ class BoardGomoku:
                 count_stones = 0
 
     def win(self, player):
+        Tk().wm_withdraw()  # Hide useless window
         messagebox.showinfo('Game over', "The winner is: " f"{'BLACK!!' if player == PLAYER_BLACK else 'WHITE!!'}")
         self.stop_drawing = True
         pygame.quit()
