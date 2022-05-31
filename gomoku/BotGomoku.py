@@ -10,7 +10,7 @@ PLAYER_BLACK = 1
 PLAYER_WHITE = 2
 
 
-# noinspection PyShadowingNames
+# noinspection PyShadowingNames,DuplicatedCode
 class BotGomoku:
     def __init__(self, color, k=5):
         self.myColor = color
@@ -210,16 +210,11 @@ class BotGomoku:
         # 3. It continues his attack strategy without being fooled by single opposing stones located far from
         # the masses
         # noinspection PyPep8
-        return self.check_five_in_row(opp_lines, self.opponent) * 12 - self.check_five_in_row(my_lines,
-                                                                                              self.myColor) * 12 + \
-               self.check_four_in_row(opp_lines, self.opponent) * 5.2 - self.check_four_in_row(my_lines,
-                                                                                               self.myColor) * 3.2 + \
-               self.check_broken_four(opp_lines, self.opponent) * 5.2 - self.check_broken_four(my_lines,
-                                                                                               self.myColor) * 3.2 + \
-               self.check_three_in_row(opp_lines, self.opponent) * 2.15 - self.check_three_in_row(my_lines,
-                                                                                                  self.myColor) * .95 + \
-               self.check_broken_three(opp_lines, self.opponent) * 1.55 - self.check_broken_three(my_lines,
-                                                                                                  self.myColor) * .85 + \
+        return self.check_five_in_row(opp_lines, self.opponent) * 12 - self.check_five_in_row(my_lines, self.myColor) * 12 + \
+               self.check_four_in_row(opp_lines, self.opponent) * 7.2 - self.check_four_in_row(my_lines, self.myColor) * 3.2 + \
+               self.check_broken_four(opp_lines, self.opponent) * 7.2 - self.check_broken_four(my_lines, self.myColor) * 3.2 + \
+               self.check_three_in_row(opp_lines, self.opponent) * 2.15 - self.check_three_in_row(my_lines, self.myColor) * .95 + \
+               self.check_broken_three(opp_lines, self.opponent) * 1.55 - self.check_broken_three(my_lines, self.myColor) * .85 + \
                self.check_two_in_row(lines, self.opponent) * .02 - self.check_two_in_row(lines, self.myColor) * .2 + \
                self.check_broken_two(lines, self.opponent) * .02 - self.check_broken_two(lines, self.myColor) * .2 + \
                self.check_one(lines, self.opponent) * .01 - self.check_one(lines, self.myColor) * .01
