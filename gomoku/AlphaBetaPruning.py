@@ -1,4 +1,3 @@
-
 # noinspection PyShadowingNames
 import numpy as np
 
