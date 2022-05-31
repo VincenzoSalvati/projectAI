@@ -38,4 +38,5 @@ def alpha_beta_search(game, state):
         if value > best_score:
             best_score = value
             best_action = move
+    print(best_score, player)
     return best_action

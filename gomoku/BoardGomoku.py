@@ -3,12 +3,13 @@ import random
 import sys
 import threading
 import time
-from tkinter import messagebox, Tk
+from tkinter import messagebox, Tk, ttk
 
 import numpy as np
 import pygame
 from pygame import gfxdraw
-
+from tkinter import *
+from tkinter import messagebox
 from gomoku.BotGomoku import BotGomoku
 from gomoku.ButtonHome import ButtonHome
 
@@ -252,17 +253,88 @@ def draw_board_match(board_gomoku, mod):
 
 
 def play_Player_VS_PC():
+    global board_gomoku
     board_gomoku = BoardGomoku(15)
     mod = 1
     thread_draw_board_gomoku = threading.Thread(target=draw_board_match, args=([board_gomoku, mod]))
     thread_draw_board_gomoku.start()
     pygame.display.set_caption("Player VS PC")
 
-    bot_white = BotGomoku(PLAYER_WHITE)
+    def choose_white():
+        global player_color, bot, root, board_gomoku
+        player_color = PLAYER_WHITE
+        bot = BotGomoku(PLAYER_BLACK)
 
-    while True:
+        try:
+            root.destroy()
+        except Exception as e:
+            pass
+
+        start_game()
+
+    def choose_black():
+        global player_color, bot, root, board_gomoku
+        player_color = PLAYER_BLACK
+        bot = BotGomoku(PLAYER_WHITE)
+        board_gomoku.request_move(bot)
+
+        try:
+            root.destroy()
+        except:
+            pass
+        start_game()
+
+    def place2stones():
+        global player_color, bot, root, board_gomoku
+
+        try:
+            root.destroy()
+        except:
+            pass
+
+        board_gomoku.update_match(PLAYER_WHITE)
         board_gomoku.update_match(PLAYER_BLACK)
-        board_gomoku.request_move(bot_white)
+
+        bot = BotGomoku(PLAYER_WHITE)
+        utility = bot.compute_utility(board_gomoku.board, PLAYER_WHITE)
+        if utility > 0:
+            choose_white()
+        else:
+            choose_black()
+
+    if choosing_order():
+        global root, player_color, bot
+        board_gomoku.update_match(PLAYER_BLACK)
+        board_gomoku.update_match(PLAYER_WHITE)
+        board_gomoku.update_match(PLAYER_BLACK)
+
+
+        white_utility = BotGomoku(PLAYER_WHITE).compute_utility(board_gomoku.board, PLAYER_WHITE)
+        black_utility = BotGomoku(PLAYER_BLACK).compute_utility(board_gomoku.board, PLAYER_BLACK)
+        print("WHITE UTILITY : ", white_utility)
+        print("BLACK UTILITY : ", black_utility)
+        if white_utility > black_utility:
+            choose_black()
+        else:
+            choose_white()
+
+    else:
+
+        opening(board_gomoku)
+        root = Tk()
+        root.geometry("500x200")
+        ttk.Button(root, text="WHITE", command=choose_white).pack()
+        ttk.Button(root, text="BLACK", command=choose_black).pack()
+        ttk.Button(root, text="Place 2 stones", command=place2stones).pack()
+        root.protocol("WM_DELETE_WINDOW", place2stones)
+        root.mainloop()
+
+
+def start_game():
+    global board_gomoku
+    while True:
+        board_gomoku.update_match(player_color)
+        board_gomoku.request_move(bot)
         pygame.event.clear()
 
 
@@ -370,3 +442,16 @@ def init_home_gomoku():
     list_buttons = [button_player_vs_pc, button_player_vs_player, button_pc_vs_pc, button_exit]
 
     update_home(screen, list_buttons)
+
+
+def choosing_order():
+    Tk().wm_withdraw()  # to hide the main window
+    return messagebox.askyesno(title="Game Color choosing",
+                               message="Do you want to play as First Player? ")
+
+
+def opening(board_gomoku):
+    col, row = random.randint(0, board_gomoku.size - 1), random.randint(0, board_gomoku.size - 1)
+    board_gomoku.board[col, row] = PLAYER_BLACK
+    board_gomoku.request_move(BotGomoku(PLAYER_WHITE))
+    board_gomoku.request_move(BotGomoku(PLAYER_BLACK))

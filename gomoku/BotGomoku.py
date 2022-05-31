@@ -20,14 +20,17 @@ class BotGomoku:
     def get_color(self):
         return self.myColor
 
+    def set_color(self, color):
+        self.myColor = color
+        self.opponent = PLAYER_BLACK if color == PLAYER_WHITE else PLAYER_WHITE
+
     @staticmethod
     def actions(state):
         """Legal moves are any square not yet taken."""
         return state.moves
 
     def utility(self, state, player):
-        """Return the value to player; 1 for win, -1 for loss, 0 otherwise."""
-        return state.utility if player == self.opponent else -state.utility
+        return state.utility
 
     @staticmethod
     def terminal_test(state):
@@ -65,7 +68,7 @@ class BotGomoku:
 
         player = (PLAYER_BLACK if state.to_move == PLAYER_WHITE else PLAYER_WHITE)
 
-        return GameState(to_move= player,
+        return GameState(to_move=player,
                          utility=self.compute_utility(board, player),
                          board=board,
                          moves=moves,
@@ -211,14 +214,19 @@ class BotGomoku:
         # by the opponent (even if only slightly)
         # 3. It continues his attack strategy without being fooled by single opposing stones located far from
         # the masses
-        return  self.check_five_in_row(opp_lines, self.opponent) * 12 - self.check_five_in_row(my_lines, self.myColor) * 12 + \
-                self.check_four_in_row(opp_lines, self.opponent) * 5.2 - self.check_four_in_row(my_lines, self.myColor) * 3.2 + \
-                self.check_broken_four(opp_lines, self.opponent) * 5 - self.check_broken_four(my_lines, self.myColor) * 3.1 + \
-                self.check_three_in_row(opp_lines, self.opponent) * 2.15 - self.check_three_in_row(my_lines, self.myColor) * 0.95 + \
-                self.check_broken_three(opp_lines, self.opponent) * 1.55 - self.check_broken_three(my_lines, self.myColor) * 0.85 + \
-                self.check_two_in_row(lines, self.opponent) * .02 - self.check_two_in_row(lines, self.myColor) * .02 + \
-                self.check_broken_two(lines, self.opponent) * .02 - self.check_broken_two(lines, self.myColor) * .02 + \
-                self.check_one(lines, self.opponent) * .001 - self.check_one(lines, self.myColor) * .01
+        return self.check_five_in_row(my_lines, self.myColor) * 12 - self.check_five_in_row(opp_lines,
+                                                                                            self.opponent) * 12 + \
+               self.check_four_in_row(my_lines, self.myColor) * 3.2 - self.check_four_in_row(opp_lines,
+                                                                                             self.opponent) * 5.2 + \
+               self.check_broken_four(my_lines, self.myColor) * 3.1 - self.check_broken_four(opp_lines,
+                                                                                             self.opponent) * 5 + \
+               self.check_three_in_row(my_lines, self.myColor) * 0.95 - self.check_three_in_row(opp_lines,
+                                                                                                self.opponent) * 2.15 + \
+               self.check_broken_three(my_lines, self.myColor) * 0.85 - self.check_broken_three(opp_lines,
+                                                                                                self.opponent) * 1.55 + \
+               self.check_two_in_row(lines, self.myColor) * .02 - self.check_two_in_row(lines, self.opponent) * .02 + \
+               self.check_broken_two(lines, self.myColor) * .02 - self.check_broken_two(lines, self.opponent) * .02
+        # self.check_one(lines, self.opponent) * .001 - self.check_one(lines, self.myColor) * .01
 
     def evaluate_line_white(self, array):
         lines = np.array(self.subarray(array, 5))
@@ -253,14 +261,19 @@ class BotGomoku:
         # 3. It continues his attack strategy without being fooled by single opposing stones located far from
         # the masses
         # noinspection PyPep8
-        return self.check_five_in_row(opp_lines, self.opponent) * 20 - self.check_five_in_row(my_lines, self.myColor) * 20 + \
-               self.check_four_in_row(opp_lines, self.opponent) * 15 - self.check_four_in_row(my_lines, self.myColor) * 6 + \
-               self.check_broken_four(opp_lines, self.opponent) * 14 - self.check_broken_four(my_lines, self.myColor) * 4.5 + \
-               self.check_three_in_row(opp_lines, self.opponent) * 8 - self.check_three_in_row(my_lines, self.myColor) * 4 + \
-               self.check_broken_three(opp_lines, self.opponent) * 7 - self.check_broken_three(my_lines, self.myColor) * 2.5 + \
-               self.check_two_in_row(lines, self.opponent) * .03 - self.check_two_in_row(lines, self.myColor) * .3 + \
-               self.check_broken_two(lines, self.opponent) * .03 - self.check_broken_two(lines, self.myColor) * .3 + \
-               self.check_one(lines, self.opponent) * .01 - self.check_one(lines, self.myColor) * .1
+        return self.check_five_in_row(my_lines, self.myColor) * 20 - self.check_five_in_row(opp_lines,
+                                                                                            self.opponent) * 20 + \
+               self.check_four_in_row(my_lines, self.myColor) * 6 - self.check_four_in_row(opp_lines,
+                                                                                           self.opponent) * 15 + \
+               self.check_broken_four(my_lines, self.myColor) * 4.5 - self.check_broken_four(opp_lines,
+                                                                                             self.opponent) * 14 + \
+               self.check_three_in_row(my_lines, self.myColor) * 4 - self.check_three_in_row(opp_lines,
+                                                                                             self.opponent) * 8 + \
+               self.check_broken_three(my_lines, self.myColor) * 2.5 - self.check_broken_three(opp_lines,
+                                                                                               self.opponent) * 7 + \
+               self.check_two_in_row(lines, self.myColor) * .3 - self.check_two_in_row(lines, self.opponent) * .03 + \
+               self.check_broken_two(lines, self.myColor) * .3 - self.check_broken_two(lines, self.opponent) * .03
+        # self.ines, self.myColor) * .1
 
     def compute_utility(self, board, player):
         arrays = self.extract_arrays(board)
