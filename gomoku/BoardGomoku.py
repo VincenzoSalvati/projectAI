@@ -245,7 +245,7 @@ class BoardGomoku:
 def draw_board_match(board_gomoku, mod):
     while True:
         board_gomoku.draw(mod)
-        time.sleep(.1)
+        time.sleep(.5)
         if board_gomoku.stop_drawing:
             break
 
