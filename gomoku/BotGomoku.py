@@ -262,8 +262,8 @@ class BotGomoku:
         # 3. It continues his attack strategy without being fooled by single opposing stones located far from
         # the masses
         # noinspection PyPep8
-        return self.check_five_in_row(myLines, self.myColor) * 22 - self.check_five_in_row(oppLines,
-                                                                                           self.oppColor) * 22 + \
+        return self.check_five_in_row(myLines, self.myColor) * 24 - self.check_five_in_row(oppLines,
+                                                                                           self.oppColor) * 24 + \
                self.check_four_in_row(myLines, self.myColor) * 10 - self.check_four_in_row(oppLines,
                                                                                            self.oppColor) * 10 + \
                self.check_broken_four(myLines, self.myColor) * 8 - self.check_broken_four(oppLines,
