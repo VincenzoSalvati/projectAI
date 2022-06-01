@@ -30,7 +30,6 @@ def alpha_beta_search(game, state):
     best_score = -np.inf
     beta = np.inf
     best_action = None
-
     for move in game.actions(state):
         value = min_value(game.result(state, move), best_score, beta)
         if value > best_score:

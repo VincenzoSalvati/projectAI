@@ -17,6 +17,7 @@ class ButtonHome:
         # bottom rectangle
         self.bottom_rect = pygame.Rect(pos, (width, height))
         self.bottom_color = '#7a4019'
+
         # text
         self.text = text
         self.text_surf = gui_font.render(text, True, '#000000')
@@ -27,7 +28,8 @@ class ButtonHome:
         self.text_rect = self.text_surf.get_rect(center=self.top_rect.center)
 
     def draw(self, screen):
-        # elevation logic
+        self.dynamic_election = 5
+
         self.top_rect.y = self.original_y_pos - self.dynamic_election
         self.text_rect.center = self.top_rect.center
 
@@ -36,9 +38,10 @@ class ButtonHome:
 
         pygame.draw.rect(screen, self.bottom_color, self.bottom_rect, border_radius=12)
         pygame.draw.rect(screen, self.top_color, self.top_rect, border_radius=12)
+
         screen.blit(self.text_surf, self.text_rect)
+
         self.check_pass_on()
-        self.dynamic_election = 5
 
     def check_pass_on(self):
         mouse_pos = pygame.mouse.get_pos()
