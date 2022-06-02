@@ -116,6 +116,8 @@ class BoardGomoku:
 
         self.black_turn = True
 
+        self.stop_passing = False
+
         self.moves_done = []
 
     def end(self, player, move, bot):
@@ -142,21 +144,23 @@ class BoardGomoku:
                 count_stones = 0
 
     def win(self, player, bot=None):
+        self.draw(0)
+        self.stop_drawing = True
         heuristic_string = ""
         if bot is not None:
             heuristic_string = f"Main heuristic = {bot.main_heuristic}."
         Tk().wm_withdraw()  # Hide useless window
         messagebox.showinfo('Game over',
                             "The winner is: " f"{'BLACK!!' if player == PLAYER_BLACK else 'WHITE!! '} {'Bot has won! - ' + heuristic_string if bot is not None else 'Human has won!'}")
-        self.stop_drawing = True
         pygame.quit()
         sys.exit()
 
     def tie(self):
+        self.draw(0)
+        self.stop_drawing = True
         Tk().wm_withdraw()  # Hide useless window
         messagebox.showinfo('Game over',
                             "The game ended in a tie.")
-        self.stop_drawing = True
         pygame.quit()
         sys.exit()
 
@@ -237,14 +241,16 @@ class BoardGomoku:
             self.screen.blit(number, position_stone)
 
         # Text above
-        if mod == 1:
+        if mod == 1 and not self.stop_passing:
             turn_msg = (
                 f"{'Black to move. Press P to pass own turn.' if self.black_turn else 'White to move. Press P to pass own turn.'}")
         elif mod == 2:
             turn_msg = (
                 f"{'Black to move. Press P to pass own turn.' if self.black_turn else 'White to move. Press P to pass own turn.'}")
-        else:
+        elif mod == 3 or self.stop_passing:
             turn_msg = f"{'Black to move.' if self.black_turn else 'White to move.'}"
+        else:
+            turn_msg = "Game over!"
         txt = self.font.render(turn_msg, True, BLACK)
         self.screen.blit(txt, TURN_POS)
 
@@ -278,7 +284,7 @@ class BoardGomoku:
                         break
                     else:
                         self.WRONG_CLICK.play()
-                elif events[0].type == pygame.KEYUP:
+                elif events[0].type == pygame.KEYUP and not self.stop_passing:
                     if events[0].key == pygame.K_p:
                         self.change_turn()
                         break
@@ -434,9 +440,11 @@ def play_player_vs_pc():
     chrono = ChronoMeter()
     # Swap 2
     if first_turn_of_human():
+        board_gomoku.stop_passing = True
         board_gomoku.update_match(PLAYER_BLACK)
         board_gomoku.update_match(PLAYER_WHITE)
         board_gomoku.update_match(PLAYER_BLACK)
+        board_gomoku.stop_passing = False
 
         white_utility = BotGomoku(PLAYER_WHITE).compute_utility(board_gomoku.board)
         black_utility = BotGomoku(PLAYER_BLACK).compute_utility(board_gomoku.board)
@@ -499,7 +507,7 @@ def play_player_vs_player():
         board_gomoku.update_match(PLAYER_WHITE)
 
 
-# noinspection PyShadowingNames
+# noinspection PyShadowingNames,DuplicatedCode
 def play_pc_vs_pc():
     board_gomoku = BoardGomoku(15)
     mod = 3
