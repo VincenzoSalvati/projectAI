@@ -355,6 +355,9 @@ class BotGomoku:
         return score
 
     def bot_move(self, board):
+        if np.count_nonzero(board) == 225:
+            return -1, -1
+
         state = GameState(to_move=self.myColor,
                           utility=0,
                           board=board,

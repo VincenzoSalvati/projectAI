@@ -98,6 +98,8 @@ def x_y_from(col, row, size):
 
 
 # noinspection PyShadowingNames
+
+
 class BoardGomoku:
     def __init__(self, size, length_victory=5):
         self.size = size
@@ -142,19 +144,32 @@ class BoardGomoku:
     def win(self, player, bot=None):
         heuristic_string = ""
         if bot is not None:
-            heuristic_string = f"Main heuristic = {bot.main_heuristic}"
+            heuristic_string = f"Main heuristic = {bot.main_heuristic}."
         Tk().wm_withdraw()  # Hide useless window
         messagebox.showinfo('Game over',
-                            "The winner is: " f"{'BLACK!!' if player == PLAYER_BLACK else 'WHITE!! '} {'Bot has won - ' + heuristic_string if bot is not None else 'Human has won'}")
+                            "The winner is: " f"{'BLACK!!' if player == PLAYER_BLACK else 'WHITE!! '} {'Bot has won! - ' + heuristic_string if bot is not None else 'Human has won!'}")
         self.stop_drawing = True
         pygame.quit()
         sys.exit()
+
+    def tie(self):
+        Tk().wm_withdraw()  # Hide useless window
+        messagebox.showinfo('Game over',
+                            "The game ended in a tie.")
+        self.stop_drawing = True
+        pygame.quit()
+        sys.exit()
+
 
     def request_move(self, bot_gomoku):
         if np.count_nonzero(self.board) == 0:
             col, row = random.randint(0, self.size - 1), random.randint(0, self.size - 1)
         else:
             col, row = bot_gomoku.bot_move(self.board)
+
+        if (col, row) == (-1, -1):
+            self.tie()
+
         # Draw stone, play sound, check end and pass move
         self.board[col, row] = bot_gomoku.get_color()
         self.moves_done.append(((col, row), np.count_nonzero(self.board), bot_gomoku.get_color()))
