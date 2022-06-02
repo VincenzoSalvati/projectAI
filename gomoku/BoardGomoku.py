@@ -160,7 +160,6 @@ class BoardGomoku:
         pygame.quit()
         sys.exit()
 
-
     def request_move(self, bot_gomoku):
         if np.count_nonzero(self.board) == 0:
             col, row = random.randint(0, self.size - 1), random.randint(0, self.size - 1)
