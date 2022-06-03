@@ -638,6 +638,7 @@ def play_pc_vs_pc():
     second_bot.main_heuristic = False
 
     chrono_match = ChronoMeter()
+
     chrono_match.start()
     # First 2 random move
     chrono_first_bot = ChronoMeter()
@@ -682,8 +683,10 @@ def play_pc_vs_pc():
         pygame.event.clear()
 
     chrono_match.stop()
-    row = [str(first_bot.main_heuristic), str(round((chrono_first_bot.mean_log() / 1000), 2)) + ' s', str(first_bot.has_won),
-           str(second_bot.main_heuristic), str(round((chrono_second_bot.mean_log() / 1000), 2)) + ' s', str(second_bot.has_won),
+    row = [str(first_bot.main_heuristic), str(round((chrono_first_bot.mean_log() / 1000), 2)) + ' s',
+           str(first_bot.has_won),
+           str(second_bot.main_heuristic), str(round((chrono_second_bot.mean_log() / 1000), 2)) + ' s',
+           str(second_bot.has_won),
            str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
     write_csv_pc_vs_pc(row)
 

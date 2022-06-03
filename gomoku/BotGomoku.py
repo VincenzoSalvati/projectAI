@@ -334,12 +334,12 @@ class BotGomoku:
         # the masses
 
         # noinspection PyPep8
-        return self.check_five_in_row(myLines, self.myColor) * 24 - self.check_five_in_row(oppLines,
-                                                                                           self.oppColor) * 24 + \
-               self.check_four_in_row(myLines, self.myColor) * 10 - self.check_four_in_row(oppLines,
-                                                                                           self.oppColor) * 10 + \
-               self.check_broken_four(myLines, self.myColor) * 10 - self.check_broken_four(oppLines,
-                                                                                           self.oppColor) * 10 + \
+        return self.check_five_in_row(myLines, self.myColor) * 30 - self.check_five_in_row(oppLines,
+                                                                                           self.oppColor) * 30 + \
+               self.check_four_in_row(myLines, self.myColor) * 15 - self.check_four_in_row(oppLines,
+                                                                                           self.oppColor) * 15 + \
+               self.check_broken_four(myLines, self.myColor) * 15 - self.check_broken_four(oppLines,
+                                                                                           self.oppColor) * 15 + \
                self.check_three_in_row(myLines, self.myColor) * 3 - self.check_three_in_row(oppLines,
                                                                                             self.oppColor) * 3 + \
                self.check_broken_three(myLines, self.myColor) * 3 - self.check_broken_three(oppLines,
