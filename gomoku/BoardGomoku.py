@@ -1,3 +1,4 @@
+import csv
 import itertools
 import random
 import sys
@@ -35,6 +36,42 @@ ELEVATION_BUTTON = 5
 
 PLAYER_BLACK = 1
 PLAYER_WHITE = 2
+
+
+def read_csv_player_vs_pc():
+    with open('Player_VS_PC.csv', mode='r') as csv_file:
+        csv_reader = csv.reader(csv_file)
+        for _ in csv_reader:
+            return True
+        return False
+
+
+def read_csv_pc_vs_pc():
+    with open('PC_VS_PC.csv', mode='r') as csv_file:
+        csv_reader = csv.reader(csv_file)
+        for _ in csv_reader:
+            return True
+        return False
+
+
+def write_csv_player_vs_pc(row):
+    with open('Player_VS_PC.csv', 'a+', newline='') as player_vs_pc_file:
+        csvwriter = csv.writer(player_vs_pc_file)
+        if not read_csv_player_vs_pc():
+            csvwriter.writerow(['Bot main heuristic', 'Bot mean elapsed time', 'Bot win',
+                                'Tie', 'Match elapsed time'])
+        csvwriter.writerow(row)
+
+
+def write_csv_pc_vs_pc(row):
+    with open('PC_VS_PC.csv', 'a+', newline='') as pc_vs_pc_file:
+        csvwriter = csv.writer(pc_vs_pc_file)
+        if not read_csv_pc_vs_pc():
+            csvwriter.writerow(
+                ['1° bot main heuristic', '1° bot mean elapsed time', '1° bot win',
+                 '2° bot main heuristic', '2° bot mean elapsed time', '2° bot win',
+                 'Tie', 'Match elapsed time'])
+        csvwriter.writerows(row)
 
 
 # Graphics
@@ -108,7 +145,6 @@ class BoardGomoku:
 
         self.screen = pygame.display.set_mode((BOARD_DIMENSION, BOARD_DIMENSION))
         self.start_points, self.end_points = make_grid(size)
-        self.stop_drawing = False
         self.font = pygame.font.SysFont('Arial', 20, bold=True)
         self.font_number_stone = pygame.font.SysFont('Arial', 15, bold=True)
         self.WRONG_CLICK = pygame.mixer.Sound("../wav/wrong_click.wav")
@@ -116,7 +152,10 @@ class BoardGomoku:
 
         self.black_turn = True
 
+        self.stop_drawing = False
         self.stop_passing = False
+
+        self.has_tie = False
 
         self.moves_done = []
 
@@ -138,31 +177,27 @@ class BoardGomoku:
                     break
                 else:
                     count_stones = 0
-            if count_stones == 5:
+            if count_stones == 5 and not self.stop_drawing:
                 self.win(player, bot)
             else:
                 count_stones = 0
 
     def win(self, player, bot=None):
         self.draw(0)
-        self.stop_drawing = True
         heuristic_string = ""
         if bot is not None:
+            bot.has_won = True
             heuristic_string = f"Main heuristic = {bot.main_heuristic}."
         Tk().wm_withdraw()  # Hide useless window
         messagebox.showinfo('Game over',
                             "The winner is: " f"{'BLACK!!' if player == PLAYER_BLACK else 'WHITE!! '} {'Bot has won! - ' + heuristic_string if bot is not None else 'Human has won!'}")
-        pygame.quit()
-        sys.exit()
 
     def tie(self):
+        self.has_tie = True
         self.draw(0)
-        self.stop_drawing = True
         Tk().wm_withdraw()  # Hide useless window
         messagebox.showinfo('Game over',
                             "The game ended in a tie.")
-        pygame.quit()
-        sys.exit()
 
     def request_move(self, bot_gomoku):
         if np.count_nonzero(self.board) == 0:
@@ -256,6 +291,9 @@ class BoardGomoku:
 
         pygame.display.flip()
 
+        if mod == 0:
+            self.stop_drawing = True
+
     def change_turn(self):
         self.black_turn = not self.black_turn
 
@@ -301,7 +339,7 @@ def draw_board_match(board_gomoku, mod):
 
 # noinspection PyGlobalUndefined,DuplicatedCode
 def play_player_vs_pc():
-    global board_gomoku, chrono, root, player_color, bot
+    global board_gomoku, chrono_match, chrono_bot, root, player_color, bot
 
     # noinspection PyShadowingNames,DuplicatedCode
     def opening_bot():
@@ -309,25 +347,25 @@ def play_player_vs_pc():
         board_gomoku.moves_done.append((move, np.count_nonzero(board_gomoku.board) + 1, PLAYER_BLACK))
         board_gomoku.board[move] = PLAYER_BLACK
 
-        chrono.start()
+        chrono_bot.start()
         board_gomoku.request_move(BotGomoku(PLAYER_WHITE))
-        chrono.stop_and_append_log()
+        chrono_bot.stop_and_append_log()
         print(
             "Elapsed time" + f"{' main' if BotGomoku(PLAYER_WHITE).main_heuristic == True else ' No-main'}" + " bot(#move " +
             str(np.count_nonzero(board_gomoku.board)) + "): " +
-            str(round(chrono.get_execution_time() / 1000, 3)) +
+            str(round(chrono_bot.get_execution_time() / 1000, 3)) +
             "[s]    -    Mean elapsed time" + f"{' main' if BotGomoku(PLAYER_WHITE).main_heuristic == True else ' No-main'}" + " bot: " +
-            str(round(chrono.mean_log() / 1000, 3)) + "[s]")
+            str(round(chrono_bot.mean_log() / 1000, 3)) + "[s]")
 
-        chrono.start()
+        chrono_bot.start()
         board_gomoku.request_move(BotGomoku(PLAYER_BLACK))
-        chrono.stop_and_append_log()
+        chrono_bot.stop_and_append_log()
         print(
             "Elapsed time" + f"{' main' if BotGomoku(PLAYER_BLACK).main_heuristic == True else ' No-main'}" + " bot(#move " +
             str(np.count_nonzero(board_gomoku.board)) + "): " +
-            str(round(chrono.get_execution_time() / 1000, 3)) +
+            str(round(chrono_bot.get_execution_time() / 1000, 3)) +
             "[s]    -    Mean elapsed time" + f"{' main' if BotGomoku(PLAYER_BLACK).main_heuristic == True else ' No-main'}" + " bot: " +
-            str(round(chrono.mean_log() / 1000, 3)) + "[s]")
+            str(round(chrono_bot.mean_log() / 1000, 3)) + "[s]")
 
         board_gomoku.change_turn()
 
@@ -339,19 +377,34 @@ def play_player_vs_pc():
 
         # Start game
         while True:
+            if board_gomoku.stop_drawing:
+                break
             board_gomoku.update_match(player_color)
+            if board_gomoku.stop_drawing:
+                break
 
-            chrono.start()
+            chrono_bot.start()
+            if board_gomoku.stop_drawing:
+                break
             board_gomoku.request_move(bot)
-            chrono.stop_and_append_log()
+            chrono_bot.stop_and_append_log()
+            if board_gomoku.stop_drawing:
+                break
             print(
                 "Elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot(#move " +
                 str(np.count_nonzero(board_gomoku.board)) + "): " +
-                str(round(chrono.get_execution_time() / 1000, 3)) +
+                str(round(chrono_bot.get_execution_time() / 1000, 3)) +
                 "[s]    -    Mean elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot: " +
-                str(round(chrono.mean_log() / 1000, 3)) + "[s]")
+                str(round(chrono_bot.mean_log() / 1000, 3)) + "[s]")
 
             pygame.event.clear()
+
+        chrono_match.stop()
+        row = [str(bot.main_heuristic), str(round((chrono_bot.mean_log() / 1000), 2)) + ' s', str(bot.has_won),
+               str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
+        write_csv_player_vs_pc(row)
+
+        sys.exit()
 
     # noinspection PyShadowingNames,DuplicatedCode
     def human_move_white_stones():
@@ -359,31 +412,46 @@ def play_player_vs_pc():
         player_color = PLAYER_BLACK
         bot = BotGomoku(PLAYER_WHITE)
 
-        chrono.start()
+        chrono_bot.start()
         board_gomoku.request_move(bot)
-        chrono.stop_and_append_log()
+        chrono_bot.stop_and_append_log()
         print(
             "Elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot(#move " +
             str(np.count_nonzero(board_gomoku.board)) + "): " +
-            str(round(chrono.get_execution_time() / 1000, 3)) +
+            str(round(chrono_bot.get_execution_time() / 1000, 3)) +
             "[s]    -    Mean elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot: " +
-            str(round(chrono.mean_log() / 1000, 3)) + "[s]")
+            str(round(chrono_bot.mean_log() / 1000, 3)) + "[s]")
 
         # Start game
         while True:
+            if board_gomoku.stop_drawing:
+                break
             board_gomoku.update_match(player_color)
+            if board_gomoku.stop_drawing:
+                break
 
-            chrono.start()
+            chrono_bot.start()
+            if board_gomoku.stop_drawing:
+                break
             board_gomoku.request_move(bot)
-            chrono.stop_and_append_log()
+            chrono_bot.stop_and_append_log()
+            if board_gomoku.stop_drawing:
+                break
             print(
                 "Elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot(#move " +
                 str(np.count_nonzero(board_gomoku.board)) + "): " +
-                str(round(chrono.get_execution_time() / 1000, 3)) +
+                str(round(chrono_bot.get_execution_time() / 1000, 3)) +
                 "[s]    -    Mean elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot: " +
-                str(round(chrono.mean_log() / 1000, 3)) + "[s]")
+                str(round(chrono_bot.mean_log() / 1000, 3)) + "[s]")
 
             pygame.event.clear()
+
+        chrono_match.stop()
+        row = [str(bot.main_heuristic), str(round((chrono_bot.mean_log() / 1000), 2)) + ' s', str(bot.has_won),
+               str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
+        write_csv_player_vs_pc(row)
+
+        sys.exit()
 
     # noinspection DuplicatedCode, PyShadowingNames
     def human_place_other_2_stones():
@@ -400,33 +468,48 @@ def play_player_vs_pc():
             player_color = PLAYER_WHITE
             bot = BotGomoku(PLAYER_BLACK)
 
-            chrono.start()
+            chrono_bot.start()
             board_gomoku.request_move(bot)
-            chrono.stop_and_append_log()
+            chrono_bot.stop_and_append_log()
             print(
                 "Elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot(#move " +
                 str(np.count_nonzero(board_gomoku.board)) + "): " +
-                str(round(chrono.get_execution_time() / 1000, 3)) +
+                str(round(chrono_bot.get_execution_time() / 1000, 3)) +
                 "[s]    -    Mean elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot: " +
-                str(round(chrono.mean_log() / 1000, 3)) + "[s]")
+                str(round(chrono_bot.mean_log() / 1000, 3)) + "[s]")
 
             board_gomoku.change_turn()
 
         # Start game
         while True:
+            if board_gomoku.stop_drawing:
+                break
             board_gomoku.update_match(player_color)
+            if board_gomoku.stop_drawing:
+                break
 
-            chrono.start()
+            chrono_bot.start()
+            if board_gomoku.stop_drawing:
+                break
             board_gomoku.request_move(bot)
-            chrono.stop_and_append_log()
+            chrono_bot.stop_and_append_log()
+            if board_gomoku.stop_drawing:
+                break
             print(
                 "Elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot(#move " +
                 str(np.count_nonzero(board_gomoku.board)) + "): " +
-                str(round(chrono.get_execution_time() / 1000, 3)) +
+                str(round(chrono_bot.get_execution_time() / 1000, 3)) +
                 "[s]    -    Mean elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot: " +
-                str(round(chrono.mean_log() / 1000, 3)) + "[s]")
+                str(round(chrono_bot.mean_log() / 1000, 3)) + "[s]")
 
             pygame.event.clear()
+
+        chrono_match.stop()
+        row = [str(bot.main_heuristic), str(round((chrono_bot.mean_log() / 1000), 2)) + ' s', str(bot.has_won),
+               str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
+        write_csv_player_vs_pc(row)
+
+        sys.exit()
 
     def first_turn_of_human():
         Tk().wm_withdraw()  # to hide the main window
@@ -437,7 +520,11 @@ def play_player_vs_pc():
     thread_draw_board_gomoku = threading.Thread(target=draw_board_match, args=([board_gomoku, mod]))
     thread_draw_board_gomoku.start()
     pygame.display.set_caption("Player VS PC")
-    chrono = ChronoMeter()
+
+    chrono_match = ChronoMeter()
+    chrono_bot = ChronoMeter()
+
+    chrono_match.start()
     # Swap 2
     if first_turn_of_human():
         board_gomoku.stop_passing = True
@@ -455,33 +542,51 @@ def play_player_vs_pc():
             player_color = PLAYER_WHITE
             bot = BotGomoku(PLAYER_BLACK)
 
-            chrono.start()
+            chrono_bot.start()
             board_gomoku.request_move(bot)
-            chrono.stop_and_append_log()
+            chrono_bot.stop_and_append_log()
             print(
                 "Elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot(#move " +
                 str(np.count_nonzero(board_gomoku.board)) + "): " +
-                str(round(chrono.get_execution_time() / 1000, 3)) +
+                str(round(chrono_bot.get_execution_time() / 1000, 3)) +
                 "[s]    -    Mean elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot: " +
-                str(round(chrono.mean_log() / 1000, 3)) + "[s]")
+                str(round(chrono_bot.mean_log() / 1000, 3)) + "[s]")
 
             board_gomoku.change_turn()
 
         # Start game
         while True:
+            if board_gomoku.stop_drawing:
+                break
             board_gomoku.update_match(player_color)
+            if board_gomoku.stop_drawing:
+                break
 
-            chrono.start()
+            chrono_bot.start()
+            if board_gomoku.stop_drawing:
+                break
             board_gomoku.request_move(bot)
-            chrono.stop_and_append_log()
+            chrono_bot.stop_and_append_log()
+            if board_gomoku.stop_drawing:
+                break
             print(
                 "Elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot(#move " +
                 str(np.count_nonzero(board_gomoku.board)) + "): " +
-                str(round(chrono.get_execution_time() / 1000, 3)) +
+                str(round(chrono_bot.get_execution_time() / 1000, 3)) +
                 "[s]    -    Mean elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot: " +
-                str(round(chrono.mean_log() / 1000, 3)) + "[s]")
+                str(round(chrono_bot.mean_log() / 1000, 3)) + "[s]")
 
             pygame.event.clear()
+
+        chrono_match.stop()
+
+        row = [str(bot.main_heuristic), str(round((chrono_bot.mean_log() / 1000), 2)) + ' s', str(bot.has_won),
+               str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
+        write_csv_player_vs_pc(row)
+
+        pygame.quit()
+        sys.exit()
+
     else:
         opening_bot()
         root = Tk()
@@ -503,8 +608,20 @@ def play_player_vs_player():
     pygame.display.set_caption("Player VS Player")
 
     while True:
+        if board_gomoku.stop_drawing:
+            break
+
         board_gomoku.update_match(PLAYER_BLACK)
+
+        if board_gomoku.stop_drawing:
+            break
+
         board_gomoku.update_match(PLAYER_WHITE)
+
+        if board_gomoku.stop_drawing:
+            break
+
+    sys.exit()
 
 
 # noinspection PyShadowingNames,DuplicatedCode
@@ -520,6 +637,8 @@ def play_pc_vs_pc():
     second_bot = BotGomoku(PLAYER_WHITE if first_bot.get_color() == PLAYER_BLACK else PLAYER_BLACK)
     second_bot.main_heuristic = False
 
+    chrono_match = ChronoMeter()
+    chrono_match.start()
     # First 2 random move
     chrono_first_bot = ChronoMeter()
     board_gomoku.request_move(first_bot)
@@ -532,6 +651,10 @@ def play_pc_vs_pc():
 
     # Start game
     while True:
+        if board_gomoku.stop_drawing:
+            chrono_match.stop()
+            break
+
         chrono_first_bot.start()
         board_gomoku.request_move(first_bot)
         chrono_first_bot.stop_and_append_log()
@@ -542,6 +665,10 @@ def play_pc_vs_pc():
             "[s]    -    Mean elapsed time" + f"{' main' if first_bot.main_heuristic == True else ' No-main'}" + " bot: " +
             str(round(chrono_first_bot.mean_log() / 1000, 3)) + "[s]")
 
+        if board_gomoku.stop_drawing:
+            chrono_match.stop()
+            break
+
         chrono_second_bot.start()
         board_gomoku.request_move(second_bot)
         chrono_second_bot.stop_and_append_log()
@@ -551,7 +678,21 @@ def play_pc_vs_pc():
             str(round(chrono_second_bot.get_execution_time() / 1000, 3)) +
             "[s]    -    Mean elapsed time" + f"{' main' if second_bot.main_heuristic == True else ' No-main'}" + " bot: " +
             str(round(chrono_second_bot.mean_log() / 1000, 3)) + "[s]")
+
+        if board_gomoku.stop_drawing:
+            chrono_match.stop()
+            break
+
         pygame.event.clear()
+
+    row = [str(first_bot.main_heuristic), str(round((chrono_first_bot.mean_log() / 1000), 2)) + ' s',
+           str(first_bot.has_won),
+           str(second_bot.main_heuristic), str(round((chrono_second_bot.mean_log() / 1000), 2)) + ' s',
+           str(second_bot.has_won),
+           str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
+    write_csv_pc_vs_pc(row)
+
+    sys.exit()
 
 
 def draw_buttons(screen, list_buttons):

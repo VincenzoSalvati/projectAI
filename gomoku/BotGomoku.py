@@ -15,7 +15,10 @@ class BotGomoku:
         self.myColor = color
         self.oppColor = PLAYER_BLACK if color == PLAYER_WHITE else PLAYER_WHITE
         self.length_victory = k
+
         self.main_heuristic = True
+
+        self.has_won = False
 
     def get_color(self):
         return self.myColor
