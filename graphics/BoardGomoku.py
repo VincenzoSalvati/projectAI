@@ -12,9 +12,9 @@ import numpy as np
 import pygame
 from pygame import gfxdraw
 
-from gomoku.BotGomoku import BotGomoku
-from gomoku.ButtonHome import ButtonHome
-from gomoku.ChronoMeter import ChronoMeter
+from botAI.BotGomoku import BotGomoku
+from graphics.ButtonHome import ButtonHome
+from utility.ChronoMeter import ChronoMeter
 
 BOARD_BROWN = (199, 105, 42)
 BOARD_DIMENSION = 700
@@ -39,7 +39,7 @@ PLAYER_WHITE = 2
 
 
 def read_csv_player_vs_pc():
-    with open('Player_VS_PC.csv', mode='r') as csv_file:
+    with open('./log/Player_VS_PC.csv', mode='r') as csv_file:
         csv_reader = csv.reader(csv_file)
         for _ in csv_reader:
             return True
@@ -47,7 +47,7 @@ def read_csv_player_vs_pc():
 
 
 def read_csv_pc_vs_pc():
-    with open('PC_VS_PC.csv', mode='r') as csv_file:
+    with open('./log/PC_VS_PC.csv', mode='r') as csv_file:
         csv_reader = csv.reader(csv_file)
         for _ in csv_reader:
             return True
@@ -55,7 +55,7 @@ def read_csv_pc_vs_pc():
 
 
 def write_csv_player_vs_pc(row):
-    with open('Player_VS_PC.csv', 'a+', newline='') as player_vs_pc_file:
+    with open('./log/Player_VS_PC.csv', 'a+', newline='') as player_vs_pc_file:
         csvwriter = csv.writer(player_vs_pc_file)
         if not read_csv_player_vs_pc():
             csvwriter.writerow(['Bot main heuristic', 'Bot mean elapsed time', 'Bot win',
@@ -64,7 +64,7 @@ def write_csv_player_vs_pc(row):
 
 
 def write_csv_pc_vs_pc(row):
-    with open('PC_VS_PC.csv', 'a+', newline='') as pc_vs_pc_file:
+    with open('./log/PC_VS_PC.csv', 'a+', newline='') as pc_vs_pc_file:
         csvwriter = csv.writer(pc_vs_pc_file)
         if not read_csv_pc_vs_pc():
             csvwriter.writerow(
@@ -147,8 +147,8 @@ class BoardGomoku:
         self.start_points, self.end_points = make_grid(size)
         self.font = pygame.font.SysFont('Arial', 20, bold=True)
         self.font_number_stone = pygame.font.SysFont('Arial', 15, bold=True)
-        self.WRONG_CLICK = pygame.mixer.Sound("../wav/wrong_click.wav")
-        self.RIGHT_CLICK = pygame.mixer.Sound("../wav/right_click.wav")
+        self.RIGHT_CLICK = pygame.mixer.Sound("./data/right_click.wav")
+        self.WRONG_CLICK = pygame.mixer.Sound("./data/wrong_click.wav")
 
         self.black_turn = True
 
