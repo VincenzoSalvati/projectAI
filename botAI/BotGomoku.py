@@ -52,7 +52,7 @@ class BotGomoku:
             x, y = coordinates
             padded_board = np.pad(board, 1)
             if board[x][y] == 0:
-                if np.any(padded_board[x - 1:x + 1, y - 1:y + 1] != 0):
+                if np.any(padded_board[x:x + 3, y:y + 3] != 0):
                     return True
             else:
                 return False
