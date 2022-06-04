@@ -337,16 +337,16 @@ class BotGomoku:
         # the masses
 
         # noinspection PyPep8
-        return self.check_five_in_row(my_lines, self.my_color) * 40 - self.check_five_in_row(opp_lines,
-                                                                                             self.opp_color) * 39 + \
-               self.check_four_in_row(my_lines, self.my_color) * 15 - self.check_four_in_row(opp_lines,
-                                                                                             self.opp_color) * 20 + \
-               self.check_broken_four(my_lines, self.my_color) * 15 - self.check_broken_four(opp_lines,
-                                                                                             self.opp_color) * 20 + \
+        return self.check_five_in_row(my_lines, self.my_color) * 10000 - self.check_five_in_row(opp_lines,
+                                                                                             self.opp_color) * 9999 + \
+               self.check_four_in_row(my_lines, self.my_color) * 100 - self.check_four_in_row(opp_lines,
+                                                                                             self.opp_color) * 95 + \
+               self.check_broken_four(my_lines, self.my_color) * 100 - self.check_broken_four(opp_lines,
+                                                                                             self.opp_color) * 95 + \
                self.check_three_in_row(my_lines, self.my_color) * 5 - self.check_three_in_row(opp_lines,
-                                                                                              self.opp_color) * 8 + \
+                                                                                              self.opp_color) * 10 + \
                self.check_broken_three(my_lines, self.my_color) * 5 - self.check_broken_three(opp_lines,
-                                                                                              self.opp_color) * 8 + \
+                                                                                              self.opp_color) * 10 + \
                self.check_two_in_row(my_lines, self.my_color) * 1 - self.check_two_in_row(opp_lines,
                                                                                           self.opp_color) * .5 + \
                self.check_broken_two(my_lines, self.my_color) * 1 - self.check_broken_two(opp_lines,
