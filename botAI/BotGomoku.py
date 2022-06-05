@@ -232,30 +232,6 @@ class BotGomoku:
         if len(my_lines) == 0 and len(opp_lines) == 0:
             return 0
 
-        # Offensive at the beginning or when there are no combinations greater than 2-patterns
-
-        # Defensive as far as patterns of 3 and 4 are concerned.
-
-        # However, 3-patterns must be generated to put the opponent in difficulty,
-        # hence their weight is not too much smaller than 4-patterns... except for defence
-
-        # Broken-pattern are worth less than Row-pattern because you can win with just one move and, in addition to
-        # that, such patterns are easily spotted on a chessboard
-
-        # Victory must be both taken (for itself) and avoided (for the opponent) and must be worth much more than
-        # other combinations
-
-        # Weaknesses:
-        # 1.Does not pay attention to sequences longer than 5 stones (both for himself and for the opponent)
-        # 2.Does not elaborate complicated strategies on purpose (e.g. special patterns)
-
-        # Strengths:
-        # 1.He is alarmed in situations of at least 5 consecutive stones (both for himself and for the opponent)
-        # 2.A high value of 3-patterns and 4-patterns gives more chances to generate advantageous situations for
-        # itself, but, at the same time, it prefers blocking the generation of such situations
-        # by the opponent (even if only slightly)
-        # 3. It continues his attack strategy without being fooled by single opposing stones located far from
-        # the masses
         return self.check_five_in_row(my_lines, self.my_color) * 20 - self.check_five_in_row(opp_lines,
                                                                                              self.opp_color) * 20 + \
                self.check_four_in_row(my_lines, self.my_color) * 5.3 - self.check_four_in_row(opp_lines,
@@ -311,38 +287,13 @@ class BotGomoku:
         if len(my_lines) == 0 and len(opp_lines) == 0:
             return 0
 
-        # Offensive at the beginning or when there are no combinations greater than 2-patterns
-
-        # Defensive as far as patterns of 3 and 4 are concerned
-
-        # However, 3-patterns must be generated to put the opponent in difficulty,
-        # hence their weight is not too much smaller than 4-patterns... except for defence
-
-        # Broken-pattern are worth less than Row-pattern because, although 3-patterns in rows are counted more times
-        # (due to the stride of 1 in the subarray function), they are still very dangerous
-
-        # Victory must be both taken (for itself) and avoided (for the opponent) and must be worth much more than
-        # other combinations
-
-        # Weaknesses:
-        # 1.Does not pay attention to sequences longer than 5 stones (both for himself and for the opponent)
-        # 2.Does not elaborate complicated strategies on purpose (e.g. special patterns)
-
-        # Strengths:
-        # 1.He is alarmed in situations of at least 5 consecutive stones (both for himself and for the opponent)
-        # 2.A high value of 3-patterns and 4-patterns gives more chances to generate advantageous situations for
-        # itself, but, at the same time, it prefers blocking the generation of such situations
-        # by the opponent (even if only slightly)
-        # 3. It continues his attack strategy without being fooled by single opposing stones located far from
-        # the masses
-
         # noinspection PyPep8
         return self.check_five_in_row(my_lines, self.my_color) * 10000 - self.check_five_in_row(opp_lines,
-                                                                                             self.opp_color) * 9999 + \
-               self.check_four_in_row(my_lines, self.my_color) * 100 - self.check_four_in_row(opp_lines,
-                                                                                             self.opp_color) * 95 + \
-               self.check_broken_four(my_lines, self.my_color) * 100 - self.check_broken_four(opp_lines,
-                                                                                             self.opp_color) * 95 + \
+                                                                                                self.opp_color) * 9999 + \
+               self.check_four_in_row(my_lines, self.my_color) * 105 - self.check_four_in_row(opp_lines,
+                                                                                              self.opp_color) * 100 + \
+               self.check_broken_four(my_lines, self.my_color) * 105 - self.check_broken_four(opp_lines,
+                                                                                              self.opp_color) * 100 + \
                self.check_three_in_row(my_lines, self.my_color) * 5 - self.check_three_in_row(opp_lines,
                                                                                               self.opp_color) * 10 + \
                self.check_broken_three(my_lines, self.my_color) * 5 - self.check_broken_three(opp_lines,
