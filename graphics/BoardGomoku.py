@@ -405,6 +405,7 @@ def play_player_vs_pc():
                str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
         write_csv_player_vs_pc(row)
 
+        pygame.quit()
         sys.exit()
 
     # noinspection PyShadowingNames,DuplicatedCode
@@ -443,6 +444,7 @@ def play_player_vs_pc():
                str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
         write_csv_player_vs_pc(row)
 
+        pygame.quit()
         sys.exit()
 
     # noinspection DuplicatedCode, PyShadowingNames
@@ -504,6 +506,7 @@ def play_player_vs_pc():
                str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
         write_csv_player_vs_pc(row)
 
+        pygame.quit()
         sys.exit()
 
     def first_turn_of_human():
@@ -616,6 +619,7 @@ def play_player_vs_player():
         if board_gomoku.stop_drawing:
             break
 
+    pygame.quit()
     sys.exit()
 
 
@@ -706,6 +710,7 @@ def play_pc_vs_pc():
            str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
     write_csv_pc_vs_pc(row)
 
+    pygame.quit()
     sys.exit()
 
 
@@ -739,7 +744,7 @@ def update_home(screen, list_buttons):
                             play_pc_vs_pc()
                         else:
                             pygame.quit()
-                            exit()
+                            sys.exit()
 
         # Update home screen
         screen.fill('#c7692a')
