@@ -738,6 +738,7 @@ def update_home(screen, list_buttons):
                         elif button.text == "PC VS PC":
                             play_pc_vs_pc()
                         else:
+                            pygame.quit()
                             exit()
 
         # Update home screen
