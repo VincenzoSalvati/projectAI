@@ -631,6 +631,8 @@ def play_pc_vs_pc():
     thread_draw_board_gomoku.start()
     pygame.display.set_caption("PC VS PC")
 
+    board_gomoku.stop_passing = True
+
     first_bot = BotGomoku(random.randint(1, 2))
 
     second_bot = BotGomoku(PLAYER_WHITE if first_bot.get_color() == PLAYER_BLACK else PLAYER_BLACK)
@@ -672,6 +674,13 @@ def play_pc_vs_pc():
 
     # Start game
     while True:
+        # Exit
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                board_gomoku.stop_drawing = True
+                pygame.quit()
+                sys.exit()
+
         chrono_first_bot.start()
         if board_gomoku.stop_drawing:
             break
@@ -685,6 +694,13 @@ def play_pc_vs_pc():
             str(round(chrono_first_bot.get_execution_time() / 1000, 3)) +
             "[s]    -    Mean elapsed time" + f"{' main' if first_bot.main_heuristic == True else ' No-main'}" + " bot: " +
             str(round(chrono_first_bot.mean_log() / 1000, 3)) + "[s]")
+
+        # Exit
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                board_gomoku.stop_drawing = True
+                pygame.quit()
+                sys.exit()
 
         chrono_second_bot.start()
         if board_gomoku.stop_drawing:
@@ -700,7 +716,12 @@ def play_pc_vs_pc():
             "[s]    -    Mean elapsed time" + f"{' main' if second_bot.main_heuristic == True else ' No-main'}" + " bot: " +
             str(round(chrono_second_bot.mean_log() / 1000, 3)) + "[s]")
 
-        pygame.event.clear()
+        # Exit
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                board_gomoku.stop_drawing = True
+                pygame.quit()
+                sys.exit()
 
     chrono_match.stop()
     row = [str(first_bot.main_heuristic), str(round((chrono_first_bot.mean_log() / 1000), 2)) + ' s',
