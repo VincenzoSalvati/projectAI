@@ -366,24 +366,8 @@ def play_player_vs_pc():
         player_color = PLAYER_BLACK
         bot = BotGomoku(PLAYER_WHITE)
 
-        chrono_bot.start()
-        board_gomoku.request_move(bot)
-        chrono_bot.stop_and_append_log()
-        print(
-            "Elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot(#move " +
-            str(np.count_nonzero(board_gomoku.board)) + "): " +
-            str(round(chrono_bot.get_execution_time() / 1000, 3)) +
-            "[s]    -    Mean elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot: " +
-            str(round(chrono_bot.mean_log() / 1000, 3)) + "[s]")
-
         # Start game
         while True:
-            if board_gomoku.stop_drawing:
-                break
-            board_gomoku.update_match(player_color)
-            if board_gomoku.stop_drawing:
-                break
-
             chrono_bot.start()
             if board_gomoku.stop_drawing:
                 break
@@ -397,6 +381,10 @@ def play_player_vs_pc():
                 str(round(chrono_bot.get_execution_time() / 1000, 3)) +
                 "[s]    -    Mean elapsed time" + f"{' main' if bot.main_heuristic == True else ' No-main'}" + " bot: " +
                 str(round(chrono_bot.mean_log() / 1000, 3)) + "[s]")
+
+            board_gomoku.update_match(player_color)
+            if board_gomoku.stop_drawing:
+                break
 
             pygame.event.clear()
 
@@ -536,6 +524,18 @@ def play_player_vs_pc():
         if white_utility > black_utility:
             player_color = PLAYER_BLACK
             bot = BotGomoku(PLAYER_WHITE)
+        elif white_utility == black_utility:
+            board_gomoku.request_move(BotGomoku(PLAYER_WHITE))
+            board_gomoku.request_move(BotGomoku(PLAYER_BLACK))
+
+            root = Tk()
+            root.title("What do you want to do?")
+            root.geometry("310x50")
+            ttk.Button(root, text="Playing with black stones", command=human_move_black_stones).pack()
+            ttk.Button(root, text="Playing with white stones", command=human_move_white_stones).pack()
+            root.protocol("WM_DELETE_WINDOW", DISABLED)
+            root.eval('tk::PlaceWindow . center')
+            root.mainloop()
         else:
             player_color = PLAYER_WHITE
             bot = BotGomoku(PLAYER_BLACK)
@@ -593,7 +593,8 @@ def play_player_vs_pc():
         ttk.Button(root, text="Playing with black stones", command=human_move_black_stones).pack()
         ttk.Button(root, text="Playing with white stones", command=human_move_white_stones).pack()
         ttk.Button(root, text="Place 2 stones", command=human_place_other_2_stones).pack()
-        root.protocol("WM_DELETE_WINDOW", human_place_other_2_stones)
+        root.protocol("WM_DELETE_WINDOW", DISABLED)
+        root.eval('tk::PlaceWindow . center')
         root.mainloop()
 
 
