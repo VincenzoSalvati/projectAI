@@ -359,7 +359,7 @@ def play_player_vs_pc():
 
         board_gomoku.request_move(BotGomoku(PLAYER_BLACK))
 
-    # noinspection PyShadowingNames
+    # noinspection PyShadowingNames,DuplicatedCode
     def human_move_black_stones():
         root.destroy()
 
@@ -526,6 +526,7 @@ def play_player_vs_pc():
             bot = BotGomoku(PLAYER_WHITE)
         elif white_utility == black_utility:
             board_gomoku.request_move(BotGomoku(PLAYER_WHITE))
+
             board_gomoku.request_move(BotGomoku(PLAYER_BLACK))
 
             root = Tk()
@@ -587,6 +588,7 @@ def play_player_vs_pc():
 
     else:
         opening_bot()
+
         root = Tk()
         root.title("What do you want to do?")
         root.geometry("310x75")
