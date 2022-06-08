@@ -2,9 +2,9 @@ from collections import namedtuple
 
 import numpy as np
 
-from botAI.AlphaBetaPruning import alpha_beta_search
+from botAI.alpha_beta_pruning import alpha_beta_search
 from utility.ChronoMeter import ChronoMeter
-from utility.Patterns import check_five_in_row, check_four_in_row, check_broken_four, check_three_in_row, \
+from utility.patterns import check_five_in_row, check_four_in_row, check_broken_four, check_three_in_row, \
     check_broken_three, check_two_in_row, check_broken_two
 
 PLAYER_BLACK = 1
@@ -118,12 +118,11 @@ class BotGomoku:
         my_lines, opp_lines = self.extract_lines(array)
         if len(my_lines) == 0 and len(opp_lines) == 0:
             return 0
-
         return check_five_in_row(my_lines, self.my_color) * 20 - check_five_in_row(opp_lines, self.opp_color) * 20 + \
-               check_four_in_row(my_lines, self.my_color) * 5.3 - check_four_in_row(opp_lines, self.opp_color) * 8.7 + \
-               check_broken_four(my_lines, self.my_color) * 5.2 - check_broken_four(opp_lines, self.opp_color) * 8.3 + \
-               check_three_in_row(my_lines, self.my_color) * 1.6 - check_three_in_row(opp_lines, self.opp_color) * 3.6 + \
-               check_broken_three(my_lines, self.my_color) * 1.4 - check_broken_three(opp_lines, self.opp_color) * 2.6 + \
+               check_four_in_row(my_lines, self.my_color) * 7 - check_four_in_row(opp_lines, self.opp_color) * 9 + \
+               check_broken_four(my_lines, self.my_color) * 7 - check_broken_four(opp_lines, self.opp_color) * 9 + \
+               check_three_in_row(my_lines, self.my_color) * 2 - check_three_in_row(opp_lines, self.opp_color) * 5 + \
+               check_broken_three(my_lines, self.my_color) * 2 - check_broken_three(opp_lines, self.opp_color) * 5 + \
                check_two_in_row(my_lines, self.my_color) * 1 - check_two_in_row(opp_lines, self.opp_color) * .5 + \
                check_broken_two(my_lines, self.my_color) * 1 - check_broken_two(opp_lines, self.opp_color) * .5
 
@@ -131,13 +130,12 @@ class BotGomoku:
         my_lines, opp_lines = self.extract_lines(array)
         if len(my_lines) == 0 and len(opp_lines) == 0:
             return 0
-
-        return check_five_in_row(my_lines, self.my_color) * 10000 - check_five_in_row(opp_lines,
-                                                                                      self.opp_color) * 9999 + \
-               check_four_in_row(my_lines, self.my_color) * 105 - check_four_in_row(opp_lines, self.opp_color) * 100 + \
-               check_broken_four(my_lines, self.my_color) * 105 - check_broken_four(opp_lines, self.opp_color) * 100 + \
-               check_three_in_row(my_lines, self.my_color) * 5 - check_three_in_row(opp_lines, self.opp_color) * 10 + \
-               check_broken_three(my_lines, self.my_color) * 5 - check_broken_three(opp_lines, self.opp_color) * 10 + \
+        return check_five_in_row(my_lines, self.my_color) * 27000 - check_five_in_row(opp_lines,
+                                                                                      self.opp_color) * 26999 + \
+               check_four_in_row(my_lines, self.my_color) * 905 - check_four_in_row(opp_lines, self.opp_color) * 900 + \
+               check_broken_four(my_lines, self.my_color) * 905 - check_broken_four(opp_lines, self.opp_color) * 900 + \
+               check_three_in_row(my_lines, self.my_color) * 25 - check_three_in_row(opp_lines, self.opp_color) * 30 + \
+               check_broken_three(my_lines, self.my_color) * 25 - check_broken_three(opp_lines, self.opp_color) * 30 + \
                check_two_in_row(my_lines, self.my_color) * 1 - check_two_in_row(opp_lines, self.opp_color) * .5 + \
                check_broken_two(my_lines, self.my_color) * 1 - check_broken_two(opp_lines, self.opp_color) * .5
 
@@ -178,7 +176,7 @@ class BotGomoku:
 
         return score
 
-    def bot_move(self, board, branching=2):
+    def bot_search_move(self, board, branching=2):
         if np.count_nonzero(board) == 225:
             return -1, -1
 

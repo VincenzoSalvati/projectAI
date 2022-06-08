@@ -1,23 +1,18 @@
 import itertools
 import random
 import sys
-import threading
-import time
 from tkinter import *
 from tkinter import messagebox
-from tkinter import ttk
 
 import numpy as np
 import pygame
 from pygame import gfxdraw
 
 from botAI.BotGomoku import BotGomoku
+from graphics.constants import *
 from utility.ChronoMeter import ChronoMeter
 
-from utility.utils import *
-from graphics.constants import *
-
-new_actions_performed = True
+new_actions_performed = False
 
 
 # Graphics
@@ -29,19 +24,19 @@ def make_grid(size):
         Tuple[List[Tuple[float, float]]]: start and end points for gridlines
     """
     start_points, end_points = [], []
-    # vertical start points (constant y)
+    # Vertical start points (constant y)
     xs = np.linspace(BOARD_BORDER, BOARD_DIMENSION - BOARD_BORDER, size)
     ys = np.full(size, BOARD_BORDER)
     start_points += list(zip(xs, ys))
-    # horizontal start points (constant x)
+    # Horizontal start points (constant x)
     xs = np.full(size, BOARD_BORDER)
     ys = np.linspace(BOARD_BORDER, BOARD_DIMENSION - BOARD_BORDER, size)
     start_points += list(zip(xs, ys))
-    # vertical end points (constant y)
+    # Vertical end points (constant y)
     xs = np.linspace(BOARD_BORDER, BOARD_DIMENSION - BOARD_BORDER, size)
     ys = np.full(size, BOARD_DIMENSION - BOARD_BORDER)
     end_points += list(zip(xs, ys))
-    # horizontal end points (constant x)
+    # Horizontal end points (constant x)
     xs = np.full(size, BOARD_DIMENSION - BOARD_BORDER)
     ys = np.linspace(BOARD_BORDER, BOARD_DIMENSION - BOARD_BORDER, size)
     end_points += list(zip(xs, ys))
@@ -84,6 +79,7 @@ class BoardGomoku:
     def __init__(self, size, length_victory=5):
         self.size = size
         self.length_victory = length_victory
+
         self.board = np.zeros((size, size))
 
         self.screen = pygame.display.set_mode((BOARD_DIMENSION, BOARD_DIMENSION))
@@ -93,29 +89,29 @@ class BoardGomoku:
         self.RIGHT_CLICK = pygame.mixer.Sound("./data/right_click.wav")
         self.WRONG_CLICK = pygame.mixer.Sound("./data/wrong_click.wav")
 
+        self.moves_done = []
         self.black_turn = True
-
+        self.bot_turn = True
         self.end_game = False
-        self.stop_passing = False
-
         self.has_tie = False
+
         self.chronometer_match = ChronoMeter()
         self.chronometer_match.start()
-        self.moves_done = []
 
     def end(self, player, move, bot):
         x, y = move
         x = x + 5
         y = y + 5
+        count_stones = 0
+
         padded = np.pad(self.board, 5)
         clipped_row = padded[x - 5:x + 6, y]
         clipped_col = padded[x, y - 5:y + 6]
         clipped_diagonals = np.diag(padded[x - 5:x + 6, y - 5:y + 6])
         clipped_flipped_diagonals = np.diag(np.flip(padded[x - 5:x + 6, y - 5:y + 6], 1))
-        count_stones = 0
         for clip in [clipped_row, clipped_col, clipped_diagonals, clipped_flipped_diagonals]:
-            for element in clip:
-                if element == player:
+            for stone in clip:
+                if stone == player:
                     count_stones += 1
                 elif count_stones == 5:
                     break
@@ -129,9 +125,8 @@ class BoardGomoku:
     def win(self, player, bot=None):
         if self.end_game:
             return
-        else:
-            self.end_game = True
         self.chronometer_match.stop()
+        self.end_game = True
         heuristic_string = ""
         if bot is not None:
             bot.has_won = True
@@ -139,16 +134,13 @@ class BoardGomoku:
         Tk().wm_withdraw()  # Hide useless window
         messagebox.showinfo('Game over',
                             "The winner is: " f"{'BLACK!!' if player == PLAYER_BLACK else 'WHITE!! '} {'Bot has won! - ' + heuristic_string if bot is not None else 'Human has won!'}")
-        pygame.event.clear()
 
     def tie(self):
         if self.end_game:
             return
-        else:
-            self.end_game = True
-
-        self.has_tie = True
         self.chronometer_match.stop()
+        self.end_game = True
+        self.has_tie = True
         Tk().wm_withdraw()  # Hide useless window
         messagebox.showinfo('Game over',
                             "The game ended in a tie.")
@@ -174,9 +166,7 @@ class BoardGomoku:
             gfxdraw.filled_circle(self.screen, x, y, GUIDE_DOT_RADIUS, BLACK)
         pygame.display.flip()
 
-    def draw(self, mod):
-        global new_actions_performed
-        new_actions_performed = False
+    def draw(self, mod=1):
         self.clear_screen()
 
         # Redraw stones
@@ -209,14 +199,10 @@ class BoardGomoku:
             self.screen.blit(number, position_stone)
 
         # Text above
-        if mod == 1 and not self.stop_passing:
-            turn_msg = (
-                f"{'Black to move. Press P to pass own turn.' if self.black_turn else 'White to move. Press P to pass own turn.'}")
-        elif mod == 2:
-            turn_msg = (
-                f"{'Black to move. Press P to pass own turn.' if self.black_turn else 'White to move. Press P to pass own turn.'}")
-        elif mod == 3 or self.stop_passing:
+        if mod == 1:
             turn_msg = f"{'Black to move.' if self.black_turn else 'White to move.'}"
+        elif mod == 2:
+            turn_msg = f"{'Bot ' if self.bot_turn else 'Human '}" + f"{'black to move.' if self.black_turn else 'white to move.'}"
         else:
             turn_msg = "Game over!"
         txt = self.font.render(turn_msg, True, BLACK)
@@ -226,11 +212,10 @@ class BoardGomoku:
 
     def change_turn(self):
         global new_actions_performed
-
         self.black_turn = not self.black_turn
         new_actions_performed = True
 
-    def update_match(self, human_player):
+    def human_move(self, human):
         while True:
             events = pygame.event.get()
             # Exit
@@ -238,7 +223,6 @@ class BoardGomoku:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-
             # Move or pass turn
             if len(events) > 0:
                 if events[0].type == pygame.MOUSEBUTTONDOWN:
@@ -246,53 +230,60 @@ class BoardGomoku:
                     col, row = col_row_from(x, y, self.size)
                     if self.is_valid_move(col, row):
                         # draw stone, play sound, check end and pass move
-                        self.board[col, row] = human_player
-                        self.moves_done.append(((col, row), np.count_nonzero(self.board), human_player))
+                        self.board[col, row] = human
+                        self.moves_done.append(((col, row), np.count_nonzero(self.board), human))
                         self.RIGHT_CLICK.play()
-                        self.end(human_player, (col, row), None)
+                        self.end(human, (col, row), None)
                         self.change_turn()
                         break
                     else:
                         self.WRONG_CLICK.play()
-                elif events[0].type == pygame.KEYUP and not self.stop_passing:
-                    if events[0].key == pygame.K_p:
-                        self.change_turn()
-                        break
 
-    def request_move(self, bot_gomoku):
+    def bot_move(self, bot):
         if np.count_nonzero(self.board) == 0:
             col, row = random.randint(0, self.size - 1), random.randint(0, self.size - 1)
         else:
-            col, row = bot_gomoku.bot_move(self.board)
+            col, row = bot.bot_search_move(self.board)
 
+        # Tie
         if (col, row) == (-1, -1):
             self.tie()
 
         # Draw stone, play sound, check end and pass move
-        self.board[col, row] = bot_gomoku.get_color()
-        self.moves_done.append(((col, row), np.count_nonzero(self.board), bot_gomoku.get_color()))
+        self.board[col, row] = bot.get_color()
+        self.moves_done.append(((col, row), np.count_nonzero(self.board), bot.get_color()))
         self.RIGHT_CLICK.play()
-        self.end(bot_gomoku.get_color(), (col, row), bot_gomoku)
+        self.end(bot.get_color(), (col, row), bot)
         self.change_turn()
 
     def make_move(self, player):
+        global new_actions_performed
+
         if type(player) == BotGomoku:
+            self.bot_turn = True
+            new_actions_performed = True
+            events = pygame.event.get()
             player.chronometer.start()
-            self.request_move(player)
+            self.bot_move(player)
             player.chronometer.stop_and_append_log()
-            pygame.event.clear()
-
+            for event in events:
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
         else:
-            self.update_match(player)
+            self.bot_turn = False
+            new_actions_performed = True
+            self.human_move(player)
 
 
-def draw_board_match(board_gomoku, mod):
+def draw_board_match(board_gomoku):
     global new_actions_performed
+
+    board_gomoku.draw()
     while True:
         if new_actions_performed:
-            board_gomoku.draw(mod)
-        time.sleep(.1)
+            new_actions_performed = False
+            board_gomoku.draw(2)
         if board_gomoku.end_game:
             break
-
     board_gomoku.draw(0)

@@ -35,4 +35,3 @@ def write_csv_pc_vs_pc(row):
                  '2° bot main heuristic', '2° bot mean elapsed time', '2° bot win',
                  'Tie', 'Match elapsed time'])
         csvwriter.writerow(row)
-

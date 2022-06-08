@@ -26,9 +26,6 @@ class ChronoMeter:
         self.stop()
         self.append_log()
 
-    def print_time(self):
-        print(f"execution time: {self.get_execution_time()} ms")
-
     def mean_log(self):
         return sum(self.get_log()) / len(self.get_log())
 

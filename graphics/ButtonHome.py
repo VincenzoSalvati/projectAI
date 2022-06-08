@@ -23,10 +23,6 @@ class ButtonHome:
         self.text_surf = gui_font.render(text, True, '#000000')
         self.text_rect = self.text_surf.get_rect(center=self.top_rect.center)
 
-    def change_text(self, gui_font, new_text):
-        self.text_surf = gui_font.render(new_text, True, '#000000')
-        self.text_rect = self.text_surf.get_rect(center=self.top_rect.center)
-
     def draw(self, screen):
         self.dynamic_election = 5
 

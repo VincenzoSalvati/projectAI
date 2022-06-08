@@ -1,15 +1,14 @@
+import random
 import sys
 import threading
-import random
 from tkinter import Tk, messagebox, ttk, DISABLED
 
 import numpy as np
-import pygame
-from graphics.ButtonHome import *
+
 from botAI.BotGomoku import BotGomoku
-from graphics.constants import *
 from graphics.BoardGomoku import BoardGomoku, draw_board_match
-from utility.ChronoMeter import ChronoMeter
+from graphics.ButtonHome import *
+from graphics.constants import *
 from utility.utils import write_csv_player_vs_pc, write_csv_pc_vs_pc
 
 
@@ -55,6 +54,7 @@ def update_home(screen, list_buttons):
     stop_drawing_button = False
     while True:
         for event in pygame.event.get():
+            # Exit
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
@@ -62,7 +62,7 @@ def update_home(screen, list_buttons):
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 for button in list_buttons:
                     button.check_click()
-            # Start match
+            # Start mod
             elif event.type == pygame.MOUSEBUTTONUP:
                 for button in list_buttons:
                     if button.pressed:
@@ -93,82 +93,69 @@ def draw_buttons(screen, list_buttons):
 
 # noinspection PyGlobalUndefined
 def play_player_vs_pc():
-    global board_gomoku, chrono_match, chrono_bot, root, player_color, bot
+    global board_gomoku, root
 
     def opening_bot():
-        board_gomoku.stop_passing = True
-        board_gomoku.request_move(BotGomoku(PLAYER_BLACK))
-        board_gomoku.request_move(BotGomoku(PLAYER_WHITE))
-        board_gomoku.request_move(BotGomoku(PLAYER_BLACK))
-        board_gomoku.stop_passing = False
+        board_gomoku.make_move(BotGomoku(PLAYER_BLACK))
+        board_gomoku.make_move(BotGomoku(PLAYER_WHITE))
+        board_gomoku.make_move(BotGomoku(PLAYER_BLACK))
 
     def human_move_black_stones():
         root.destroy()
+
+        # Start game
         start_game(board_gomoku, BotGomoku(PLAYER_WHITE), PLAYER_BLACK)
 
     def human_move_white_stones():
         root.destroy()
+
+        # Start game
         start_game(board_gomoku, PLAYER_WHITE, BotGomoku(PLAYER_BLACK))
 
     def human_place_other_2_stones():
         root.destroy()
 
-        board_gomoku.stop_passing = True
-        board_gomoku.update_match(PLAYER_WHITE)
-        board_gomoku.update_match(PLAYER_BLACK)
-        board_gomoku.stop_passing = False
+        board_gomoku.make_move(PLAYER_WHITE)
+        board_gomoku.make_move(PLAYER_BLACK)
 
         white_utility = BotGomoku(PLAYER_WHITE).compute_utility(board_gomoku.board)
         black_utility = BotGomoku(PLAYER_BLACK).compute_utility(board_gomoku.board)
         if white_utility > black_utility:
-            player_color = PLAYER_BLACK
-            bot = BotGomoku(PLAYER_WHITE)
-
             # Start game
-            start_game(board_gomoku, bot, player_color)
+            start_game(board_gomoku, BotGomoku(PLAYER_WHITE), PLAYER_BLACK)
         else:
-            player_color = PLAYER_WHITE
-            bot = BotGomoku(PLAYER_BLACK)
-
             # Start game
-            start_game(board_gomoku, player_color, bot)
+            start_game(board_gomoku, PLAYER_WHITE, BotGomoku(PLAYER_BLACK))
 
     def first_turn_of_human():
         Tk().wm_withdraw()  # to hide the main window
         return messagebox.askyesno(title="Turn selection", message="Do you want to be the first to play?")
 
     board_gomoku = BoardGomoku(15)
-    mod = 1
-    thread_draw_board_gomoku = threading.Thread(target=draw_board_match, args=([board_gomoku, mod]))
+    thread_draw_board_gomoku = threading.Thread(target=draw_board_match, args=([board_gomoku]))
     thread_draw_board_gomoku.setDaemon(True)
     thread_draw_board_gomoku.start()
     pygame.display.set_caption("Player VS PC")
 
-    chrono_match = ChronoMeter()
-
-    chrono_match.start()
     # Swap 2
     if first_turn_of_human():
-        board_gomoku.stop_passing = True
-        board_gomoku.update_match(PLAYER_BLACK)
-        board_gomoku.update_match(PLAYER_WHITE)
-        board_gomoku.update_match(PLAYER_BLACK)
-        board_gomoku.stop_passing = False
+        board_gomoku.make_move(PLAYER_BLACK)
+        board_gomoku.make_move(PLAYER_WHITE)
+        board_gomoku.make_move(PLAYER_BLACK)
 
         white_utility = BotGomoku(PLAYER_WHITE).compute_utility(board_gomoku.board)
         black_utility = BotGomoku(PLAYER_BLACK).compute_utility(board_gomoku.board)
         if white_utility > black_utility:
-            player_color = PLAYER_BLACK
-            bot = BotGomoku(PLAYER_WHITE)
-
             # Start game
-            start_game(board_gomoku, bot, player_color)
+            start_game(board_gomoku, BotGomoku(PLAYER_WHITE), PLAYER_BLACK)
+        elif white_utility < black_utility:
+            # Start game
+            start_game(board_gomoku, PLAYER_WHITE, BotGomoku(PLAYER_BLACK))
+        else:
+            board_gomoku.make_move(BotGomoku(PLAYER_WHITE))
+            board_gomoku.make_move(BotGomoku(PLAYER_BLACK))
 
-        elif white_utility == black_utility:
-            board_gomoku.stop_passing = True
-            board_gomoku.request_move(BotGomoku(PLAYER_WHITE))
-            board_gomoku.request_move(BotGomoku(PLAYER_BLACK))
-            board_gomoku.stop_passing = False
+            board_gomoku.draw()
 
             root = Tk()
             root.title("What do you want to do?")
@@ -178,15 +165,10 @@ def play_player_vs_pc():
             root.protocol("WM_DELETE_WINDOW", DISABLED)
             root.eval('tk::PlaceWindow . center')
             root.mainloop()
-        else:
-            player_color = PLAYER_WHITE
-            bot = BotGomoku(PLAYER_BLACK)
-
-            # Start game
-            start_game(board_gomoku, player_color, bot)
-
     else:
         opening_bot()
+
+        board_gomoku.draw()
 
         root = Tk()
         root.title("What do you want to do?")
@@ -201,84 +183,66 @@ def play_player_vs_pc():
 
 def play_player_vs_player():
     board_gomoku = BoardGomoku(15)
-    mod = 2
-    thread_draw_board_gomoku = threading.Thread(target=draw_board_match, args=([board_gomoku, mod]))
+    thread_draw_board_gomoku = threading.Thread(target=draw_board_match, args=([board_gomoku]))
     thread_draw_board_gomoku.setDaemon(True)
     thread_draw_board_gomoku.start()
     pygame.display.set_caption("Player VS Player")
 
+    # Start game
     start_game(board_gomoku, PLAYER_BLACK, PLAYER_WHITE)
 
 
 def play_pc_vs_pc():
     board_gomoku = BoardGomoku(15)
-    mod = 3
-    thread_draw_board_gomoku = threading.Thread(target=draw_board_match, args=([board_gomoku, mod]))
+    thread_draw_board_gomoku = threading.Thread(target=draw_board_match, args=([board_gomoku]))
     thread_draw_board_gomoku.setDaemon(True)
     thread_draw_board_gomoku.start()
     pygame.display.set_caption("PC VS PC")
 
-    board_gomoku.stop_passing = True
-
     first_bot = BotGomoku(random.choice((PLAYER_WHITE, PLAYER_BLACK)))
-
     second_bot = BotGomoku(PLAYER_WHITE if first_bot.get_color() == PLAYER_BLACK else PLAYER_BLACK)
     second_bot.main_heuristic = False
 
-    chrono_match = ChronoMeter()
-    chrono_match.start()
-
-    # First Black stone randomly placed
-    board_gomoku.request_move(BotGomoku(PLAYER_BLACK))
-
+    # First black stone randomly placed
+    board_gomoku.make_move(BotGomoku(PLAYER_BLACK))
+    # Second white stone randomly placed around the black stone
     available_moves = list(BotGomoku(PLAYER_WHITE).compute_moves(board_gomoku.board))
     move = available_moves[random.randint(0, len(available_moves) - 1)]
     board_gomoku.board[move] = PLAYER_WHITE
-    board_gomoku.moves_done.append((move, np.count_nonzero(board_gomoku.board), PLAYER_BLACK))
+    board_gomoku.moves_done.append((move, np.count_nonzero(board_gomoku.board), PLAYER_WHITE))
     board_gomoku.change_turn()
 
-    start_game(board_gomoku, first_bot if first_bot.get_color() == PLAYER_BLACK else second_bot,
-               first_bot if first_bot.get_color() == PLAYER_WHITE else second_bot, True)
-
-    # chrono_match.stop()
-    # row = [str(first_bot.main_heuristic), str(round((chrono_first_bot.mean_log() / 1000), 2)) + ' s',
-    #        str(first_bot.has_won),
-    #        str(second_bot.main_heuristic), str(round((chrono_second_bot.mean_log() / 1000), 2)) + ' s',
-    #        str(second_bot.has_won),
-    #        str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
-    # write_csv_pc_vs_pc(row)
-    #
-    # pygame.quit()
-    # sys.exit()
+    # Start game
+    start_game(board_gomoku,
+               first_bot if first_bot.get_color() == PLAYER_BLACK else second_bot,
+               first_bot if first_bot.get_color() == PLAYER_WHITE else second_bot,
+               True)
 
 
 def start_game(board, player1, player2, pc_vs_pc=False):
-
-
     while True:
         board.make_move(player1)
         if board.end_game:
-            print("FINE PARTITA")
             break
+
         board.make_move(player2)
         if board.end_game:
-            print("FINE PARTITA")
             break
-    if type(player1) == type(player2) == int:
-        pass
-    elif pc_vs_pc:
-        row = [str(player1.main_heuristic), str(round((player1.chronometer.mean_log() / 1000), 2)) + ' s',
-               str(player1.has_won),
-               str(player2.main_heuristic), str(round((player2.chronometer.mean_log() / 1000), 2)) + ' s',
-               str(player2.has_won),
-               str(board.has_tie), str(round((board.chronometer_match.get_execution_time() / 1000), 2)) + ' s']
-        write_csv_pc_vs_pc(row)
-    else:
-        bot = player1 if type(player1) == BotGomoku else player2
-        row = [str(bot.main_heuristic), str(round((bot.chronometer.mean_log() / 1000), 2)) + ' s', str(bot.has_won),
-               str(board.has_tie), str(round((board.chronometer_match.get_execution_time() / 1000), 2)) + ' s']
 
-        write_csv_player_vs_pc(row)
+    # Update log matches
+    if not type(player1) == type(player2) == int:
+        if pc_vs_pc:
+            row = [str(player1.main_heuristic), str(round((player1.chronometer.mean_log() / 1000), 2)) + ' s',
+                   str(player1.has_won),
+                   str(player2.main_heuristic), str(round((player2.chronometer.mean_log() / 1000), 2)) + ' s',
+                   str(player2.has_won),
+                   str(board.has_tie), str(round((board.chronometer_match.get_execution_time() / 1000), 2)) + ' s']
+            write_csv_pc_vs_pc(row)
+        else:
+            bot = player1 if type(player1) == BotGomoku else player2
+            row = [str(bot.main_heuristic), str(round((bot.chronometer.mean_log() / 1000), 2)) + ' s', str(bot.has_won),
+                   str(board.has_tie), str(round((board.chronometer_match.get_execution_time() / 1000), 2)) + ' s']
+            write_csv_player_vs_pc(row)
 
     pygame.quit()
     sys.exit()

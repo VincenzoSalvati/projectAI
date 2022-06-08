@@ -28,7 +28,6 @@ def check_broken_four(lines, player):
     return count
 
 
-
 def check_three_in_row(lines, player):
     count = 0
     for line in lines:
@@ -75,14 +74,13 @@ def check_broken_two(lines, player):
             count += 1
     return count
 
-
-def check_one(lines, player):
-    count = 0
-    for line in lines:
-        if np.all(line == [player, 0, 0, 0, 0]) or \
-                np.all(line == [0, player, 0, 0, 0]) or \
-                np.all(line == [0, 0, player, 0, 0]) or \
-                np.all(line == [0, 0, 0, player, 0]) or \
-                np.all(line == [0, 0, 0, 0, player]):
-            count += 1
-    return count
+# def check_one(lines, player):
+#     count = 0
+#     for line in lines:
+#         if np.all(line == [player, 0, 0, 0, 0]) or \
+#                 np.all(line == [0, player, 0, 0, 0]) or \
+#                 np.all(line == [0, 0, player, 0, 0]) or \
+#                 np.all(line == [0, 0, 0, player, 0]) or \
+#                 np.all(line == [0, 0, 0, 0, player]):
+#             count += 1
+#     return count
