@@ -2,7 +2,6 @@ import numpy as np
 
 
 def alpha_beta_search(game, state):
-    # noinspection PyShadowingNames
     def max_value(state, alpha, beta):
         if game.terminal_test(state):
             return game.utility(state)
@@ -14,7 +13,6 @@ def alpha_beta_search(game, state):
             alpha = max(alpha, value)
         return value
 
-    # noinspection PyShadowingNames
     def min_value(state, alpha, beta):
         if game.terminal_test(state):
             return game.utility(state)
