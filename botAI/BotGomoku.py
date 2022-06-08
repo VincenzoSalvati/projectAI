@@ -3,6 +3,7 @@ from collections import namedtuple
 import numpy as np
 
 from botAI.AlphaBetaPruning import alpha_beta_search
+from utility.ChronoMeter import ChronoMeter
 from utility.Patterns import check_five_in_row, check_four_in_row, check_broken_four, check_three_in_row, \
     check_broken_three, check_two_in_row, check_broken_two
 
@@ -20,6 +21,8 @@ class BotGomoku:
 
         self.main_heuristic = True
         self.has_won = False
+
+        self.chronometer = ChronoMeter()
 
     def get_color(self):
         return self.my_color

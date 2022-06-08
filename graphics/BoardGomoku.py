@@ -1,4 +1,3 @@
-import csv
 import itertools
 import random
 import sys
@@ -13,65 +12,12 @@ import pygame
 from pygame import gfxdraw
 
 from botAI.BotGomoku import BotGomoku
-from graphics.ButtonHome import ButtonHome
 from utility.ChronoMeter import ChronoMeter
 
-BOARD_BROWN = (199, 105, 42)
-BOARD_DIMENSION = 700
-BOARD_BORDER = 75
+from utility.utils import *
+from graphics.constants import *
 
-STONE_RADIUS = 18
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-
-GUIDE_DOT_RADIUS = 4
-
-TURN_POS = (BOARD_BORDER, 30)
-
-WIDTH_BUTTON = 200
-HEIGHT_BUTTON = 40
-X_BUTTON_POSITION = BOARD_DIMENSION / 2 - WIDTH_BUTTON / 2
-Y_BUTTON_POSITION = BOARD_DIMENSION / 2 - 110
-ELEVATION_BUTTON = 5
-
-PLAYER_BLACK = 1
-PLAYER_WHITE = 2
-
-
-def read_csv_player_vs_pc():
-    with open('./log/Player_VS_PC.csv', mode='r') as csv_file:
-        csv_reader = csv.reader(csv_file)
-        for _ in csv_reader:
-            return True
-        return False
-
-
-def read_csv_pc_vs_pc():
-    with open('./log/PC_VS_PC.csv', mode='r') as csv_file:
-        csv_reader = csv.reader(csv_file)
-        for _ in csv_reader:
-            return True
-        return False
-
-
-def write_csv_player_vs_pc(row):
-    with open('./log/Player_VS_PC.csv', 'a+', newline='') as player_vs_pc_file:
-        csvwriter = csv.writer(player_vs_pc_file)
-        if not read_csv_player_vs_pc():
-            csvwriter.writerow(['Bot main heuristic', 'Bot mean elapsed time', 'Bot win',
-                                'Tie', 'Match elapsed time'])
-        csvwriter.writerow(row)
-
-
-def write_csv_pc_vs_pc(row):
-    with open('./log/PC_VS_PC.csv', 'a+', newline='') as pc_vs_pc_file:
-        csvwriter = csv.writer(pc_vs_pc_file)
-        if not read_csv_pc_vs_pc():
-            csvwriter.writerow(
-                ['1° bot main heuristic', '1° bot mean elapsed time', '1° bot win',
-                 '2° bot main heuristic', '2° bot mean elapsed time', '2° bot win',
-                 'Tie', 'Match elapsed time'])
-        csvwriter.writerow(row)
+new_actions_performed = True
 
 
 # Graphics
@@ -149,12 +95,12 @@ class BoardGomoku:
 
         self.black_turn = True
 
-        self.stop_drawing = False
         self.end_game = False
         self.stop_passing = False
 
         self.has_tie = False
-
+        self.chronometer_match = ChronoMeter()
+        self.chronometer_match.start()
         self.moves_done = []
 
     def end(self, player, move, bot):
@@ -175,13 +121,17 @@ class BoardGomoku:
                     break
                 else:
                     count_stones = 0
-            if count_stones == 5 and not self.stop_drawing:
+            if count_stones == 5:
                 self.win(player, bot)
             else:
                 count_stones = 0
 
     def win(self, player, bot=None):
-        self.stop_drawing = True
+        if self.end_game:
+            return
+        else:
+            self.end_game = True
+        self.chronometer_match.stop()
         heuristic_string = ""
         if bot is not None:
             bot.has_won = True
@@ -189,29 +139,19 @@ class BoardGomoku:
         Tk().wm_withdraw()  # Hide useless window
         messagebox.showinfo('Game over',
                             "The winner is: " f"{'BLACK!!' if player == PLAYER_BLACK else 'WHITE!! '} {'Bot has won! - ' + heuristic_string if bot is not None else 'Human has won!'}")
+        pygame.event.clear()
 
     def tie(self):
+        if self.end_game:
+            return
+        else:
+            self.end_game = True
+
         self.has_tie = True
-        self.stop_drawing = True
+        self.chronometer_match.stop()
         Tk().wm_withdraw()  # Hide useless window
         messagebox.showinfo('Game over',
                             "The game ended in a tie.")
-
-    def request_move(self, bot_gomoku):
-        if np.count_nonzero(self.board) == 0:
-            col, row = random.randint(0, self.size - 1), random.randint(0, self.size - 1)
-        else:
-            col, row = bot_gomoku.bot_move(self.board)
-
-        if (col, row) == (-1, -1):
-            self.tie()
-
-        # Draw stone, play sound, check end and pass move
-        self.board[col, row] = bot_gomoku.get_color()
-        self.moves_done.append(((col, row), np.count_nonzero(self.board), bot_gomoku.get_color()))
-        self.RIGHT_CLICK.play()
-        self.end(bot_gomoku.get_color(), (col, row), bot_gomoku)
-        self.change_turn()
 
     def is_valid_move(self, col, row):
         if col < 0 or col >= self.size:
@@ -235,6 +175,8 @@ class BoardGomoku:
         pygame.display.flip()
 
     def draw(self, mod):
+        global new_actions_performed
+        new_actions_performed = False
         self.clear_screen()
 
         # Redraw stones
@@ -282,11 +224,11 @@ class BoardGomoku:
 
         pygame.display.flip()
 
-        if mod == 0:
-            self.end_game = True
-
     def change_turn(self):
+        global new_actions_performed
+
         self.black_turn = not self.black_turn
+        new_actions_performed = True
 
     def update_match(self, human_player):
         while True:
@@ -294,7 +236,6 @@ class BoardGomoku:
             # Exit
             for event in events:
                 if event.type == pygame.QUIT:
-                    self.stop_drawing = True
                     pygame.quit()
                     sys.exit()
 
@@ -318,459 +259,40 @@ class BoardGomoku:
                         self.change_turn()
                         break
 
+    def request_move(self, bot_gomoku):
+        if np.count_nonzero(self.board) == 0:
+            col, row = random.randint(0, self.size - 1), random.randint(0, self.size - 1)
+        else:
+            col, row = bot_gomoku.bot_move(self.board)
+
+        if (col, row) == (-1, -1):
+            self.tie()
+
+        # Draw stone, play sound, check end and pass move
+        self.board[col, row] = bot_gomoku.get_color()
+        self.moves_done.append(((col, row), np.count_nonzero(self.board), bot_gomoku.get_color()))
+        self.RIGHT_CLICK.play()
+        self.end(bot_gomoku.get_color(), (col, row), bot_gomoku)
+        self.change_turn()
+
+    def make_move(self, player):
+        if type(player) == BotGomoku:
+            player.chronometer.start()
+            self.request_move(player)
+            player.chronometer.stop_and_append_log()
+            pygame.event.clear()
+
+        else:
+            self.update_match(player)
+
 
 def draw_board_match(board_gomoku, mod):
+    global new_actions_performed
     while True:
-        board_gomoku.draw(mod)
-        time.sleep(.5)
-        if board_gomoku.stop_drawing:
-            break
-
-    while True:
-        board_gomoku.draw(0)
-        time.sleep(.5)
+        if new_actions_performed:
+            board_gomoku.draw(mod)
+        time.sleep(.1)
         if board_gomoku.end_game:
             break
 
-
-# noinspection PyGlobalUndefined
-def play_player_vs_pc():
-    global board_gomoku, chrono_match, chrono_bot, root, player_color, bot
-
-    def opening_bot():
-        board_gomoku.stop_passing = True
-        board_gomoku.request_move(BotGomoku(PLAYER_BLACK))
-        board_gomoku.request_move(BotGomoku(PLAYER_WHITE))
-        board_gomoku.request_move(BotGomoku(PLAYER_BLACK))
-        board_gomoku.stop_passing = False
-
-    def human_move_black_stones():
-        root.destroy()
-
-        player_color = PLAYER_BLACK
-        bot = BotGomoku(PLAYER_WHITE)
-
-        # Start game
-        while True:
-            chrono_bot.start()
-            if board_gomoku.stop_drawing:
-                break
-            board_gomoku.request_move(bot)
-            chrono_bot.stop_and_append_log()
-            if board_gomoku.stop_drawing:
-                break
-            board_gomoku.update_match(player_color)
-            if board_gomoku.stop_drawing:
-                break
-            pygame.event.clear()
-
-        chrono_match.stop()
-        row = [str(bot.main_heuristic), str(round((chrono_bot.mean_log() / 1000), 2)) + ' s', str(bot.has_won),
-               str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
-        write_csv_player_vs_pc(row)
-
-        pygame.quit()
-        sys.exit()
-
-    def human_move_white_stones():
-        root.destroy()
-
-        player_color = PLAYER_WHITE
-        bot = BotGomoku(PLAYER_BLACK)
-
-        # Start game
-        while True:
-            if board_gomoku.stop_drawing:
-                break
-            board_gomoku.update_match(player_color)
-            if board_gomoku.stop_drawing:
-                break
-            chrono_bot.start()
-            if board_gomoku.stop_drawing:
-                break
-            board_gomoku.request_move(bot)
-            chrono_bot.stop_and_append_log()
-            if board_gomoku.stop_drawing:
-                break
-            pygame.event.clear()
-
-        chrono_match.stop()
-        row = [str(bot.main_heuristic), str(round((chrono_bot.mean_log() / 1000), 2)) + ' s', str(bot.has_won),
-               str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
-        write_csv_player_vs_pc(row)
-
-        pygame.quit()
-        sys.exit()
-
-    def human_place_other_2_stones():
-        root.destroy()
-
-        board_gomoku.stop_passing = True
-        board_gomoku.update_match(PLAYER_WHITE)
-        board_gomoku.update_match(PLAYER_BLACK)
-        board_gomoku.stop_passing = False
-
-        white_utility = BotGomoku(PLAYER_WHITE).compute_utility(board_gomoku.board)
-        black_utility = BotGomoku(PLAYER_BLACK).compute_utility(board_gomoku.board)
-        if white_utility > black_utility:
-            player_color = PLAYER_BLACK
-            bot = BotGomoku(PLAYER_WHITE)
-            # Start game
-            while True:
-                if board_gomoku.stop_drawing:
-                    break
-                board_gomoku.update_match(player_color)
-                if board_gomoku.stop_drawing:
-                    break
-                chrono_bot.start()
-                if board_gomoku.stop_drawing:
-                    break
-                board_gomoku.request_move(bot)
-                chrono_bot.stop_and_append_log()
-                if board_gomoku.stop_drawing:
-                    break
-                pygame.event.clear()
-        else:
-            player_color = PLAYER_WHITE
-            bot = BotGomoku(PLAYER_BLACK)
-            board_gomoku.change_turn()
-            # Start game
-            while True:
-                chrono_bot.start()
-                if board_gomoku.stop_drawing:
-                    break
-                board_gomoku.request_move(bot)
-                if board_gomoku.stop_drawing:
-                    break
-                chrono_bot.stop_and_append_log()
-                if board_gomoku.stop_drawing:
-                    break
-                board_gomoku.update_match(player_color)
-                if board_gomoku.stop_drawing:
-                    break
-                pygame.event.clear()
-
-        chrono_match.stop()
-        row = [str(bot.main_heuristic), str(round((chrono_bot.mean_log() / 1000), 2)) + ' s', str(bot.has_won),
-               str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
-        write_csv_player_vs_pc(row)
-
-        pygame.quit()
-        sys.exit()
-
-    def first_turn_of_human():
-        Tk().wm_withdraw()  # to hide the main window
-        return messagebox.askyesno(title="Turn selection", message="Do you want to be the first to play?")
-
-    board_gomoku = BoardGomoku(15)
-    mod = 1
-    thread_draw_board_gomoku = threading.Thread(target=draw_board_match, args=([board_gomoku, mod]))
-    thread_draw_board_gomoku.start()
-    pygame.display.set_caption("Player VS PC")
-
-    chrono_match = ChronoMeter()
-    chrono_bot = ChronoMeter()
-
-    chrono_match.start()
-    # Swap 2
-    if first_turn_of_human():
-        board_gomoku.stop_passing = True
-        board_gomoku.update_match(PLAYER_BLACK)
-        board_gomoku.update_match(PLAYER_WHITE)
-        board_gomoku.update_match(PLAYER_BLACK)
-        board_gomoku.stop_passing = False
-
-        white_utility = BotGomoku(PLAYER_WHITE).compute_utility(board_gomoku.board)
-        black_utility = BotGomoku(PLAYER_BLACK).compute_utility(board_gomoku.board)
-        if white_utility > black_utility:
-            player_color = PLAYER_BLACK
-            bot = BotGomoku(PLAYER_WHITE)
-            # Start game
-            while True:
-                if board_gomoku.stop_drawing:
-                    break
-                board_gomoku.update_match(player_color)
-                if board_gomoku.stop_drawing:
-                    break
-
-                chrono_bot.start()
-                if board_gomoku.stop_drawing:
-                    break
-                board_gomoku.request_move(bot)
-                chrono_bot.stop_and_append_log()
-                if board_gomoku.stop_drawing:
-                    break
-                pygame.event.clear()
-        elif white_utility == black_utility:
-            board_gomoku.stop_passing = True
-            board_gomoku.request_move(BotGomoku(PLAYER_WHITE))
-            board_gomoku.request_move(BotGomoku(PLAYER_BLACK))
-            board_gomoku.stop_passing = False
-
-            root = Tk()
-            root.title("What do you want to do?")
-            root.geometry("310x50")
-            ttk.Button(root, text="Playing with black stones", command=human_move_black_stones).pack()
-            ttk.Button(root, text="Playing with white stones", command=human_move_white_stones).pack()
-            root.protocol("WM_DELETE_WINDOW", DISABLED)
-            root.eval('tk::PlaceWindow . center')
-            root.mainloop()
-        else:
-            player_color = PLAYER_WHITE
-            bot = BotGomoku(PLAYER_BLACK)
-
-            # Start game
-            while True:
-                chrono_bot.start()
-                if board_gomoku.stop_drawing:
-                    break
-                board_gomoku.request_move(bot)
-                chrono_bot.stop_and_append_log()
-                if board_gomoku.stop_drawing:
-                    break
-                pygame.event.clear()
-                if board_gomoku.stop_drawing:
-                    break
-                board_gomoku.update_match(player_color)
-                if board_gomoku.stop_drawing:
-                    break
-
-        chrono_match.stop()
-        row = [str(bot.main_heuristic), str(round((chrono_bot.mean_log() / 1000), 2)) + ' s', str(bot.has_won),
-               str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
-        write_csv_player_vs_pc(row)
-
-        pygame.quit()
-        sys.exit()
-
-    else:
-        opening_bot()
-
-        root = Tk()
-        root.title("What do you want to do?")
-        root.geometry("310x75")
-        ttk.Button(root, text="Playing with black stones", command=human_move_black_stones).pack()
-        ttk.Button(root, text="Playing with white stones", command=human_move_white_stones).pack()
-        ttk.Button(root, text="Place 2 stones", command=human_place_other_2_stones).pack()
-        root.protocol("WM_DELETE_WINDOW", DISABLED)
-        root.eval('tk::PlaceWindow . center')
-        root.mainloop()
-
-
-def play_player_vs_player():
-    board_gomoku = BoardGomoku(15)
-    mod = 2
-    thread_draw_board_gomoku = threading.Thread(target=draw_board_match, args=([board_gomoku, mod]))
-    thread_draw_board_gomoku.start()
-    pygame.display.set_caption("Player VS Player")
-
-    while True:
-        if board_gomoku.stop_drawing:
-            break
-        board_gomoku.update_match(PLAYER_BLACK)
-        if board_gomoku.stop_drawing:
-            break
-        board_gomoku.update_match(PLAYER_WHITE)
-        if board_gomoku.stop_drawing:
-            break
-
-    pygame.quit()
-    sys.exit()
-
-
-def play_pc_vs_pc():
-    board_gomoku = BoardGomoku(15)
-    mod = 3
-    thread_draw_board_gomoku = threading.Thread(target=draw_board_match, args=([board_gomoku, mod]))
-    thread_draw_board_gomoku.start()
-    pygame.display.set_caption("PC VS PC")
-
-    board_gomoku.stop_passing = True
-
-    first_bot = BotGomoku(random.randint(1, 2))
-
-    second_bot = BotGomoku(PLAYER_WHITE if first_bot.get_color() == PLAYER_BLACK else PLAYER_BLACK)
-    second_bot.main_heuristic = False
-
-    chrono_match = ChronoMeter()
-
-    chrono_match.start()
-    # First 2 random move
-    chrono_first_bot = ChronoMeter()
-    chrono_second_bot = ChronoMeter()
-
-    if first_bot.get_color() == PLAYER_BLACK:
-        board_gomoku.request_move(first_bot)
-
-        available_moves = list(second_bot.compute_moves(board_gomoku.board))
-        move = available_moves[random.randint(0, len(available_moves) - 1)]
-        board_gomoku.board[move] = second_bot.get_color()
-        board_gomoku.moves_done.append((move, np.count_nonzero(board_gomoku.board), second_bot.get_color()))
-        board_gomoku.change_turn()
-
-        # Start game
-        while True:
-            # Exit
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    board_gomoku.stop_drawing = True
-                    pygame.quit()
-                    sys.exit()
-            chrono_first_bot.start()
-            if board_gomoku.stop_drawing:
-                break
-            board_gomoku.request_move(first_bot)
-            chrono_first_bot.stop_and_append_log()
-            if board_gomoku.stop_drawing:
-                break
-            # Exit
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    board_gomoku.stop_drawing = True
-                    pygame.quit()
-                    sys.exit()
-            chrono_second_bot.start()
-            if board_gomoku.stop_drawing:
-                break
-            board_gomoku.request_move(second_bot)
-            chrono_second_bot.stop_and_append_log()
-            if board_gomoku.stop_drawing:
-                break
-            # Exit
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    board_gomoku.stop_drawing = True
-                    pygame.quit()
-                    sys.exit()
-    else:
-        board_gomoku.request_move(second_bot)
-
-        available_moves = list(first_bot.compute_moves(board_gomoku.board))
-        move = available_moves[random.randint(0, len(available_moves) - 1)]
-        board_gomoku.board[move] = first_bot.get_color()
-        board_gomoku.moves_done.append((move, np.count_nonzero(board_gomoku.board), first_bot.get_color()))
-        board_gomoku.change_turn()
-
-        # Start game
-        while True:
-            # Exit
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    board_gomoku.stop_drawing = True
-                    pygame.quit()
-                    sys.exit()
-            chrono_second_bot.start()
-            if board_gomoku.stop_drawing:
-                break
-            board_gomoku.request_move(second_bot)
-            chrono_second_bot.stop_and_append_log()
-            if board_gomoku.stop_drawing:
-                break
-            # Exit
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    board_gomoku.stop_drawing = True
-                    pygame.quit()
-                    sys.exit()
-            chrono_first_bot.start()
-            if board_gomoku.stop_drawing:
-                break
-            board_gomoku.request_move(first_bot)
-            chrono_first_bot.stop_and_append_log()
-            if board_gomoku.stop_drawing:
-                break
-            # Exit
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    board_gomoku.stop_drawing = True
-                    pygame.quit()
-                    sys.exit()
-
-    chrono_match.stop()
-    row = [str(first_bot.main_heuristic), str(round((chrono_first_bot.mean_log() / 1000), 2)) + ' s',
-           str(first_bot.has_won),
-           str(second_bot.main_heuristic), str(round((chrono_second_bot.mean_log() / 1000), 2)) + ' s',
-           str(second_bot.has_won),
-           str(board_gomoku.has_tie), str(round((chrono_match.get_execution_time() / 1000), 2)) + ' s']
-    write_csv_pc_vs_pc(row)
-
-    pygame.quit()
-    sys.exit()
-
-
-def draw_buttons(screen, list_buttons):
-    for button in list_buttons:
-        button.draw(screen)
-
-
-def update_home(screen, list_buttons):
-    clock = pygame.time.Clock()
-    stop_drawing_button = False
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            # Animation button
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                for button in list_buttons:
-                    button.check_click()
-            # Start match
-            elif event.type == pygame.MOUSEBUTTONUP:
-                for button in list_buttons:
-                    if button.pressed:
-                        stop_drawing_button = True
-                        if button.text == "Player VS PC":
-                            play_player_vs_pc()
-                        elif button.text == "Player VS Player":
-                            play_player_vs_player()
-                        elif button.text == "PC VS PC":
-                            play_pc_vs_pc()
-                        else:
-                            pygame.quit()
-                            sys.exit()
-
-        # Update home screen
-        screen.fill('#c7692a')
-        draw_buttons(screen, list_buttons)
-        pygame.display.update()
-        clock.tick(15)
-        if stop_drawing_button:
-            break
-
-
-def init_home_gomoku():
-    screen = pygame.display.set_mode((BOARD_DIMENSION, BOARD_DIMENSION))
-    pygame.display.set_caption('Home Gomoku')
-    gui_font = pygame.font.Font(None, 30)
-
-    button_player_vs_pc = ButtonHome(gui_font,
-                                     "Player VS PC",
-                                     WIDTH_BUTTON,
-                                     HEIGHT_BUTTON,
-                                     (X_BUTTON_POSITION, Y_BUTTON_POSITION),
-                                     ELEVATION_BUTTON)
-
-    button_player_vs_player = ButtonHome(gui_font,
-                                         "Player VS Player",
-                                         WIDTH_BUTTON,
-                                         HEIGHT_BUTTON,
-                                         (X_BUTTON_POSITION, Y_BUTTON_POSITION + 60),
-                                         ELEVATION_BUTTON)
-
-    button_pc_vs_pc = ButtonHome(gui_font,
-                                 "PC VS PC",
-                                 WIDTH_BUTTON,
-                                 HEIGHT_BUTTON,
-                                 (X_BUTTON_POSITION, Y_BUTTON_POSITION + 120),
-                                 ELEVATION_BUTTON)
-
-    button_exit = ButtonHome(gui_font,
-                             "Exit",
-                             WIDTH_BUTTON,
-                             HEIGHT_BUTTON,
-                             (X_BUTTON_POSITION, Y_BUTTON_POSITION + 180),
-                             ELEVATION_BUTTON)
-
-    list_buttons = [button_player_vs_pc, button_player_vs_player, button_pc_vs_pc, button_exit]
-    update_home(screen, list_buttons)
+    board_gomoku.draw(0)

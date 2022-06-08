@@ -2,7 +2,7 @@ import os
 
 import pygame
 
-from graphics.BoardGomoku import init_home_gomoku
+from graphics.home_gomoku import init_home_gomoku
 
 if __name__ == '__main__':
     pygame.init()
