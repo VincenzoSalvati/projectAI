@@ -126,6 +126,7 @@ class BoardGomoku:
         if self.end_game:
             return
         self.chronometer_match.stop()
+        self.draw(0)
         self.end_game = True
         heuristic_string = ""
         if bot is not None:
@@ -139,6 +140,7 @@ class BoardGomoku:
         if self.end_game:
             return
         self.chronometer_match.stop()
+        self.draw(0)
         self.end_game = True
         self.has_tie = True
         Tk().wm_withdraw()  # Hide useless window
