@@ -1,5 +1,4 @@
 import csv
-import numpy as np
 
 
 def read_csv_player_vs_pc():
@@ -37,9 +36,8 @@ def write_csv_pc_vs_pc(row):
                  'Tie', 'Match elapsed time', 'Number Moves'])
         writer.writerow(row)
 
-
-def extract_sub_arrays(a, L, S=1):  # Window len = L, Stride len/step_size = S
-    a = np.array(a)
-    number_rows = ((a.size - L) // S) + 1
-    n = a.strides[0]
-    return np.lib.stride_tricks.as_strided(a, shape=(number_rows, L), strides=(S * n, n))
+# def extract_sub_arrays(a, L, S=1):  # Window len = L, Stride len/step_size = S
+#     a = np.array(a)
+#     number_rows = ((a.size - L) // S) + 1
+#     n = a.strides[0]
+#     return np.lib.stride_tricks.as_strided(a, shape=(number_rows, L), strides=(S * n, n))

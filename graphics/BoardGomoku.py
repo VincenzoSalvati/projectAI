@@ -1,5 +1,6 @@
 import itertools
 import random
+import sys
 from tkinter import *
 from tkinter import messagebox
 
@@ -204,7 +205,7 @@ class BoardGomoku:
         if mod == 1:
             turn_msg = f"{'Black to move.' if self.black_turn else 'White to move.'}"
         elif mod == 2:
-            turn_msg = f"{'Bot ' if self.bot_turn else 'Human '}" +\
+            turn_msg = f"{'Bot ' if self.bot_turn else 'Human '}" + \
                        f"{'black to move.' if self.black_turn else 'white to move.'}"
         else:
             turn_msg = "Game over!"
