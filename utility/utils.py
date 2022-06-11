@@ -22,7 +22,7 @@ def write_csv_player_vs_pc(row):
         writer = csv.writer(player_vs_pc_file)
         if not read_csv_player_vs_pc():
             writer.writerow(['Bot main heuristic', 'Bot mean elapsed time', 'Bot win',
-                             'Tie', 'Match elapsed time', 'Number Moves'])
+                             'Tie', 'Match elapsed time', 'Number moves'])
         writer.writerow(row)
 
 
@@ -33,7 +33,7 @@ def write_csv_pc_vs_pc(row):
             writer.writerow(
                 ['1° bot main heuristic', '1° bot mean elapsed time', '1° bot win',
                  '2° bot main heuristic', '2° bot mean elapsed time', '2° bot win',
-                 'Tie', 'Match elapsed time', 'Number Moves'])
+                 'Tie', 'Match elapsed time', 'Number moves'])
         writer.writerow(row)
 
 # def extract_sub_arrays(a, L, S=1):  # Window len = L, Stride len/step_size = S
