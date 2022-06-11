@@ -244,5 +244,6 @@ def start_game(board, player1, player2, pc_vs_pc=False):
                    str(board.has_tie), str(round((board.chronometer_match.get_execution_time() / 1000), 2)) + ' s']
             write_csv_player_vs_pc(row)
 
-    pygame.quit()
-    sys.exit()
+    init_home_gomoku()
+    # pygame.quit()
+    # sys.exit()

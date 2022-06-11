@@ -6,6 +6,7 @@ from botAI.alpha_beta_pruning import alpha_beta_search
 from utility.ChronoMeter import ChronoMeter
 from utility.patterns import check_five_in_row, check_four_in_row, check_broken_four, check_three_in_row, \
     check_broken_three, check_two_in_row, check_broken_two
+from utility.utils import extract_subarrays
 
 PLAYER_BLACK = 1
 PLAYER_WHITE = 2
@@ -49,11 +50,12 @@ class BotGomoku:
 
     @staticmethod
     def compute_moves(board):
-        def filtering(coordinates):
+        def filtering(coordinates, neighbourhood=3):
             x, y = coordinates
-            padded_board = np.pad(board, 1)
+            padding = (neighbourhood-1)//2
+            padded_board = np.pad(board, padding)
             if board[x][y] == 0:
-                if np.any(padded_board[x:x + 3, y:y + 3] != 0):
+                if np.any(padded_board[x:x + neighbourhood, y:y + neighbourhood] != 0):
                     return True
             else:
                 return False
@@ -115,10 +117,26 @@ class BotGomoku:
         return my_lines, opp_lines
 
     def compare_evaluate_line(self, array):
-        my_lines, opp_lines = self.extract_lines(array)
+        lines = extract_subarrays(array, 5)
+        my_lines = lines[np.count_nonzero(lines == self.my_color, axis=1) >= 2]
+        opp_lines = lines[np.count_nonzero(lines == self.opp_color, axis=1) >= 2]
         if len(my_lines) == 0 and len(opp_lines) == 0:
             return 0
-        return check_five_in_row(my_lines, self.my_color) * 20 - check_five_in_row(opp_lines, self.opp_color) * 20 + \
+
+        # Six Lines Check
+        six_lines = extract_subarrays(array, 6)
+        if len(six_lines) > 0:
+            my_color_six_lines = six_lines[np.count_nonzero(six_lines == self.my_color, axis=1) == 6]
+            opponent_color_six_lines = six_lines[np.count_nonzero(six_lines == self.opp_color, axis=1) == 6]
+            num_six_lines_my_color = len(my_color_six_lines) if len(my_color_six_lines) > 0 else -1
+            num_six_lines_opp_color = len(opponent_color_six_lines) if len(opponent_color_six_lines) > 0 else -1
+        else:
+            num_six_lines_my_color = -1
+            num_six_lines_opp_color = -1
+
+        return num_six_lines_my_color * (-20 * (num_six_lines_my_color + 1)) - num_six_lines_opp_color * (
+                -20 * (num_six_lines_opp_color + 1)) + \
+               check_five_in_row(my_lines, self.my_color) * 20 - check_five_in_row(opp_lines, self.opp_color) * 20 + \
                check_four_in_row(my_lines, self.my_color) * 7 - check_four_in_row(opp_lines, self.opp_color) * 9 + \
                check_broken_four(my_lines, self.my_color) * 7 - check_broken_four(opp_lines, self.opp_color) * 9 + \
                check_three_in_row(my_lines, self.my_color) * 2 - check_three_in_row(opp_lines, self.opp_color) * 5 + \
@@ -127,10 +145,27 @@ class BotGomoku:
                check_broken_two(my_lines, self.my_color) * 1 - check_broken_two(opp_lines, self.opp_color) * .5
 
     def main_evaluate_line(self, array):
-        my_lines, opp_lines = self.extract_lines(array)
+        lines = extract_subarrays(array, 5)
+        my_lines = lines[np.count_nonzero(lines == self.my_color, axis=1) >= 2]
+        opp_lines = lines[np.count_nonzero(lines == self.opp_color, axis=1) >= 2]
+
         if len(my_lines) == 0 and len(opp_lines) == 0:
             return 0
-        return check_five_in_row(my_lines, self.my_color) * 27000 - check_five_in_row(opp_lines,
+
+        # Six Lines Check
+        six_lines = extract_subarrays(array, 6)
+        if len(six_lines) > 0:
+            my_color_six_lines = six_lines[np.count_nonzero(six_lines == self.my_color, axis=1) == 6]
+            opponent_color_six_lines = six_lines[np.count_nonzero(six_lines == self.opp_color, axis=1) == 6]
+            num_six_lines_my_color = len(my_color_six_lines) if len(my_color_six_lines) > 0 else -1
+            num_six_lines_opp_color = len(opponent_color_six_lines) if len(opponent_color_six_lines) > 0 else -1
+        else:
+            num_six_lines_my_color = -1
+            num_six_lines_opp_color = -1
+
+        return num_six_lines_my_color * (-27000 * (num_six_lines_my_color + 1)) - num_six_lines_opp_color * (
+                -26999 * (num_six_lines_opp_color + 1)) + \
+               check_five_in_row(my_lines, self.my_color) * 27000 - check_five_in_row(opp_lines,
                                                                                       self.opp_color) * 26999 + \
                check_four_in_row(my_lines, self.my_color) * 905 - check_four_in_row(opp_lines, self.opp_color) * 900 + \
                check_broken_four(my_lines, self.my_color) * 905 - check_broken_four(opp_lines, self.opp_color) * 900 + \

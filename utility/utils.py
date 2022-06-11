@@ -1,5 +1,7 @@
 import csv
 
+import numpy as np
+
 
 def read_csv_player_vs_pc():
     with open('./log/Player_VS_PC.csv', mode='r') as csv_file:
@@ -35,3 +37,10 @@ def write_csv_pc_vs_pc(row):
                  '2° bot main heuristic', '2° bot mean elapsed time', '2° bot win',
                  'Tie', 'Match elapsed time'])
         csvwriter.writerow(row)
+
+
+def extract_subarrays(a, L, S=1):  # Window len = L, Stride len/stepsize = S
+    a = np.array(a)
+    nrows = ((a.size-L)//S)+1
+    n = a.strides[0]
+    return np.lib.stride_tricks.as_strided(a, shape=(nrows,L), strides=(S*n,n))
