@@ -2,7 +2,9 @@ from collections import namedtuple
 
 import numpy as np
 
+from botAI.AI_constants import BOT_WEIGHTS, BOT_WEIGHTS2
 from botAI.alpha_beta_pruning import alpha_beta_search
+
 from utility.ChronoMeter import ChronoMeter
 from utility.patterns import check_five_in_row, check_four_in_row, check_broken_four, check_three_in_row, \
     check_broken_three, check_two_in_row, check_broken_two
@@ -24,6 +26,7 @@ class BotGomoku:
         self.has_won = False
 
         self.chronometer = ChronoMeter()
+        self.weights = BOT_WEIGHTS
 
     def get_color(self):
         return self.my_color
@@ -81,70 +84,7 @@ class BotGomoku:
                          moves=moves,
                          branching=branching)
 
-    def extract_lines(self, array):
-        my_lines = []
-        opp_lines = []
-
-        for start in range(0, len(array) - self.length_victory + 1):
-            line = []
-            count_my_color = 0
-            count_opp_color = 0
-            valid_line = True
-            for end in range(0, self.length_victory):
-                if array[start + end] == self.my_color:
-                    if count_opp_color != 0:
-                        valid_line = False
-                        break
-                    else:
-                        count_my_color += 1
-                        line.append(array[start + end])
-
-                elif array[start + end] == self.opp_color:
-                    if count_my_color != 0:
-                        valid_line = False
-                        break
-                    else:
-                        count_opp_color += 1
-                        line.append(array[start + end])
-                else:
-                    line.append(0)
-            if valid_line:
-                if count_my_color > 1:
-                    my_lines.append(line)
-                elif count_opp_color > 1:
-                    opp_lines.append(line)
-
-        return my_lines, opp_lines
-
-    def compare_evaluate_line(self, array):
-        lines = extract_subarrays(array, 5)
-        my_lines = lines[np.count_nonzero(lines == self.my_color, axis=1) >= 2]
-        opp_lines = lines[np.count_nonzero(lines == self.opp_color, axis=1) >= 2]
-        if len(my_lines) == 0 and len(opp_lines) == 0:
-            return 0
-
-        # Six Lines Check
-        six_lines = extract_subarrays(array, 6)
-        if len(six_lines) > 0:
-            my_color_six_lines = six_lines[np.count_nonzero(six_lines == self.my_color, axis=1) == 6]
-            opponent_color_six_lines = six_lines[np.count_nonzero(six_lines == self.opp_color, axis=1) == 6]
-            num_six_lines_my_color = len(my_color_six_lines) if len(my_color_six_lines) > 0 else -1
-            num_six_lines_opp_color = len(opponent_color_six_lines) if len(opponent_color_six_lines) > 0 else -1
-        else:
-            num_six_lines_my_color = -1
-            num_six_lines_opp_color = -1
-
-        return num_six_lines_my_color * (-20 * (num_six_lines_my_color + 1)) - num_six_lines_opp_color * (
-                -20 * (num_six_lines_opp_color + 1)) + \
-               check_five_in_row(my_lines, self.my_color) * 20 - check_five_in_row(opp_lines, self.opp_color) * 20 + \
-               check_four_in_row(my_lines, self.my_color) * 7 - check_four_in_row(opp_lines, self.opp_color) * 9 + \
-               check_broken_four(my_lines, self.my_color) * 7 - check_broken_four(opp_lines, self.opp_color) * 9 + \
-               check_three_in_row(my_lines, self.my_color) * 2 - check_three_in_row(opp_lines, self.opp_color) * 5 + \
-               check_broken_three(my_lines, self.my_color) * 2 - check_broken_three(opp_lines, self.opp_color) * 5 + \
-               check_two_in_row(my_lines, self.my_color) * 1 - check_two_in_row(opp_lines, self.opp_color) * .5 + \
-               check_broken_two(my_lines, self.my_color) * 1 - check_broken_two(opp_lines, self.opp_color) * .5
-
-    def main_evaluate_line(self, array):
+    def evaluate_line(self, array, weights):
         lines = extract_subarrays(array, 5)
         my_lines = lines[np.count_nonzero(lines == self.my_color, axis=1) >= 2]
         opp_lines = lines[np.count_nonzero(lines == self.opp_color, axis=1) >= 2]
@@ -155,24 +95,24 @@ class BotGomoku:
         # Six Lines Check
         six_lines = extract_subarrays(array, 6)
         if len(six_lines) > 0:
-            my_color_six_lines = six_lines[np.count_nonzero(six_lines == self.my_color, axis=1) == 6]
-            opponent_color_six_lines = six_lines[np.count_nonzero(six_lines == self.opp_color, axis=1) == 6]
-            num_six_lines_my_color = len(my_color_six_lines) if len(my_color_six_lines) > 0 else -1
-            num_six_lines_opp_color = len(opponent_color_six_lines) if len(opponent_color_six_lines) > 0 else -1
+            num_six_lines_my_color = np.count_nonzero(np.count_nonzero(six_lines == self.my_color, axis=1) == 6)
+            num_six_lines_opp_color = np.count_nonzero(np.count_nonzero(six_lines == self.opp_color, axis=1) == 6)
+            num_six_lines_my_color = num_six_lines_my_color if num_six_lines_my_color > 0 else -1
+            num_six_lines_opp_color = num_six_lines_opp_color if num_six_lines_opp_color > 0 else -1
         else:
             num_six_lines_my_color = -1
             num_six_lines_opp_color = -1
 
-        return num_six_lines_my_color * (-27000 * (num_six_lines_my_color + 1)) - num_six_lines_opp_color * (
-                -26999 * (num_six_lines_opp_color + 1)) + \
-               check_five_in_row(my_lines, self.my_color) * 27000 - check_five_in_row(opp_lines,
-                                                                                      self.opp_color) * 26999 + \
-               check_four_in_row(my_lines, self.my_color) * 905 - check_four_in_row(opp_lines, self.opp_color) * 900 + \
-               check_broken_four(my_lines, self.my_color) * 905 - check_broken_four(opp_lines, self.opp_color) * 900 + \
-               check_three_in_row(my_lines, self.my_color) * 25 - check_three_in_row(opp_lines, self.opp_color) * 30 + \
-               check_broken_three(my_lines, self.my_color) * 25 - check_broken_three(opp_lines, self.opp_color) * 30 + \
-               check_two_in_row(my_lines, self.my_color) * 1 - check_two_in_row(opp_lines, self.opp_color) * .5 + \
-               check_broken_two(my_lines, self.my_color) * 1 - check_broken_two(opp_lines, self.opp_color) * .5
+        score = num_six_lines_my_color * (-weights["FiveInRow"][0] * (num_six_lines_my_color + 1)) - num_six_lines_opp_color * (
+                -weights["FiveInRow"][1] * (num_six_lines_opp_color + 1))
+
+        functions = [check_five_in_row, check_four_in_row, check_broken_four, check_three_in_row, check_broken_three,
+                     check_two_in_row, check_broken_two]
+
+        for fun, val in zip(functions, weights.values()):
+            score += fun(my_lines, self.my_color) * val[0] - fun(opp_lines, self.opp_color) * val[1]
+
+        return score
 
     def extract_arrays(self, board):
         cols = []
@@ -205,9 +145,9 @@ class BotGomoku:
 
         for array in arrays:
             if self.main_heuristic:
-                score += self.main_evaluate_line(array)
+                score += self.evaluate_line(array, BOT_WEIGHTS)
             else:
-                score += self.compare_evaluate_line(array)
+                score += self.evaluate_line(array, BOT_WEIGHTS2)
 
         return score
 

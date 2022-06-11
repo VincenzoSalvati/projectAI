@@ -236,12 +236,14 @@ def start_game(board, player1, player2, pc_vs_pc=False):
                    str(player1.has_won),
                    str(player2.main_heuristic), str(round((player2.chronometer.mean_log() / 1000), 2)) + ' s',
                    str(player2.has_won),
-                   str(board.has_tie), str(round((board.chronometer_match.get_execution_time() / 1000), 2)) + ' s']
+                   str(board.has_tie), str(round((board.chronometer_match.get_execution_time() / 1000), 2)) + ' s',
+                   str(np.count_nonzero(board.board))]
             write_csv_pc_vs_pc(row)
         else:
             bot = player1 if type(player1) == BotGomoku else player2
             row = [str(bot.main_heuristic), str(round((bot.chronometer.mean_log() / 1000), 2)) + ' s', str(bot.has_won),
-                   str(board.has_tie), str(round((board.chronometer_match.get_execution_time() / 1000), 2)) + ' s']
+                   str(board.has_tie), str(round((board.chronometer_match.get_execution_time() / 1000), 2)) + ' s',
+                   str(np.count_nonzero(board.board))]
             write_csv_player_vs_pc(row)
 
     init_home_gomoku()

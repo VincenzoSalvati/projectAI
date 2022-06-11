@@ -1,6 +1,5 @@
 import itertools
 import random
-import sys
 from tkinter import *
 from tkinter import messagebox
 
@@ -134,7 +133,8 @@ class BoardGomoku:
             heuristic_string = f"Main heuristic = {bot.main_heuristic}."
         Tk().wm_withdraw()  # Hide useless window
         messagebox.showinfo('Game over',
-                            "The winner is: " f"{'BLACK!!' if player == PLAYER_BLACK else 'WHITE!! '} {'Bot has won! - ' + heuristic_string if bot is not None else 'Human has won!'}")
+                            "The winner is: " f"{'BLACK!!' if player == PLAYER_BLACK else 'WHITE!! '}"
+                            f" {'Bot has won! - ' + heuristic_string if bot is not None else 'Human has won!'}")
 
     def tie(self):
         if self.end_game:
@@ -204,7 +204,8 @@ class BoardGomoku:
         if mod == 1:
             turn_msg = f"{'Black to move.' if self.black_turn else 'White to move.'}"
         elif mod == 2:
-            turn_msg = f"{'Bot ' if self.bot_turn else 'Human '}" + f"{'black to move.' if self.black_turn else 'white to move.'}"
+            turn_msg = f"{'Bot ' if self.bot_turn else 'Human '}" +\
+                       f"{'black to move.' if self.black_turn else 'white to move.'}"
         else:
             turn_msg = "Game over!"
         txt = self.font.render(turn_msg, True, BLACK)

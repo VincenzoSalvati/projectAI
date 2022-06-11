@@ -24,7 +24,7 @@ def write_csv_player_vs_pc(row):
         csvwriter = csv.writer(player_vs_pc_file)
         if not read_csv_player_vs_pc():
             csvwriter.writerow(['Bot main heuristic', 'Bot mean elapsed time', 'Bot win',
-                                'Tie', 'Match elapsed time'])
+                                'Tie', 'Match elapsed time', 'Number Moves'])
         csvwriter.writerow(row)
 
 
@@ -35,7 +35,7 @@ def write_csv_pc_vs_pc(row):
             csvwriter.writerow(
                 ['1° bot main heuristic', '1° bot mean elapsed time', '1° bot win',
                  '2° bot main heuristic', '2° bot mean elapsed time', '2° bot win',
-                 'Tie', 'Match elapsed time'])
+                 'Tie', 'Match elapsed time', 'Number Moves'])
         csvwriter.writerow(row)
 
 
