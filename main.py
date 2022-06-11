@@ -1,5 +1,4 @@
 import os
-
 import pygame
 
 from graphics.home_gomoku import init_home_gomoku

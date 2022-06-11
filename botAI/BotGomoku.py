@@ -4,11 +4,10 @@ import numpy as np
 
 from botAI.AI_constants import BOT_WEIGHTS, BOT_WEIGHTS2
 from botAI.alpha_beta_pruning import alpha_beta_search
-
 from utility.ChronoMeter import ChronoMeter
 from utility.patterns import check_five_in_row, check_four_in_row, check_broken_four, check_three_in_row, \
     check_broken_three, check_two_in_row, check_broken_two
-from utility.utils import extract_subarrays
+from utility.utils import extract_sub_arrays
 
 PLAYER_BLACK = 1
 PLAYER_WHITE = 2
@@ -55,7 +54,7 @@ class BotGomoku:
     def compute_moves(board):
         def filtering(coordinates, neighbourhood=3):
             x, y = coordinates
-            padding = (neighbourhood-1)//2
+            padding = (neighbourhood - 1) // 2
             padded_board = np.pad(board, padding)
             if board[x][y] == 0:
                 if np.any(padded_board[x:x + neighbourhood, y:y + neighbourhood] != 0):
@@ -85,7 +84,7 @@ class BotGomoku:
                          branching=branching)
 
     def evaluate_line(self, array, weights):
-        lines = extract_subarrays(array, 5)
+        lines = extract_sub_arrays(array, 5)
         my_lines = lines[np.count_nonzero(lines == self.my_color, axis=1) >= 2]
         opp_lines = lines[np.count_nonzero(lines == self.opp_color, axis=1) >= 2]
 
@@ -93,7 +92,7 @@ class BotGomoku:
             return 0
 
         # Six Lines Check
-        six_lines = extract_subarrays(array, 6)
+        six_lines = extract_sub_arrays(array, 6)
         if len(six_lines) > 0:
             num_six_lines_my_color = np.count_nonzero(np.count_nonzero(six_lines == self.my_color, axis=1) == 6)
             num_six_lines_opp_color = np.count_nonzero(np.count_nonzero(six_lines == self.opp_color, axis=1) == 6)
@@ -103,8 +102,9 @@ class BotGomoku:
             num_six_lines_my_color = -1
             num_six_lines_opp_color = -1
 
-        score = num_six_lines_my_color * (-weights["FiveInRow"][0] * (num_six_lines_my_color + 1)) - num_six_lines_opp_color * (
-                -weights["FiveInRow"][1] * (num_six_lines_opp_color + 1))
+        score = num_six_lines_my_color * (
+                    -weights["FiveInRow"][0] * (num_six_lines_my_color + 1)) - num_six_lines_opp_color * (
+                        -weights["FiveInRow"][1] * (num_six_lines_opp_color + 1))
 
         functions = [check_five_in_row, check_four_in_row, check_broken_four, check_three_in_row, check_broken_three,
                      check_two_in_row, check_broken_two]
