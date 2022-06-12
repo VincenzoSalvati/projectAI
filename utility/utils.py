@@ -1,7 +1,27 @@
+"""
+Course: Artificial Intelligence 2021/2022
+
+Lecturer:
+Marcelli      Angelo      amarcelli@unisa.it
+Della Cioppa  Antonio     adellacioppa@unisa.it
+
+Group:
+Salvati       Vincenzo    0622701550      v.salvati10@studenti.unisa.it
+Mansi         Paolo       0622701542      p.mansi5@studenti.unisa.it
+
+@file utils.py
+
+
+PURPOSE OF THE FILE: useful function.
+"""
+
 import csv
 
 
 def read_csv_player_vs_pc():
+    """Read Player_VS_PC.csv
+
+    """
     with open('./log/Player_VS_PC.csv', mode='r') as csv_file:
         csv_reader = csv.reader(csv_file)
         for _ in csv_reader:
@@ -10,6 +30,9 @@ def read_csv_player_vs_pc():
 
 
 def read_csv_pc_vs_pc():
+    """Read PC_VS_PC.csv
+
+    """
     with open('./log/PC_VS_PC.csv', mode='r') as csv_file:
         csv_reader = csv.reader(csv_file)
         for _ in csv_reader:
@@ -18,6 +41,11 @@ def read_csv_pc_vs_pc():
 
 
 def write_csv_player_vs_pc(row):
+    """Write Player_VS_PC.csv
+
+    Args:
+        row (List[bool, float, bool, bool, float, int]): data to be written
+    """
     with open('./log/Player_VS_PC.csv', 'a+', newline='') as player_vs_pc_file:
         writer = csv.writer(player_vs_pc_file)
         if not read_csv_player_vs_pc():
@@ -27,6 +55,11 @@ def write_csv_player_vs_pc(row):
 
 
 def write_csv_pc_vs_pc(row):
+    """Write PC_VS_PC.csv
+
+    Args:
+        row (List[bool, float, bool, bool, float, bool, bool, float, int]): data to be written
+    """
     with open('./log/PC_VS_PC.csv', 'a+', newline='') as pc_vs_pc_file:
         writer = csv.writer(pc_vs_pc_file)
         if not read_csv_pc_vs_pc():
@@ -35,9 +68,3 @@ def write_csv_pc_vs_pc(row):
                  '2° bot main heuristic', '2° bot mean elapsed time', '2° bot win',
                  'Tie', 'Match elapsed time', 'Number moves'])
         writer.writerow(row)
-
-# def extract_sub_arrays(a, L, S=1):  # Window len = L, Stride len/step_size = S
-#     a = np.array(a)
-#     number_rows = ((a.size - L) // S) + 1
-#     n = a.strides[0]
-#     return np.lib.stride_tricks.as_strided(a, shape=(number_rows, L), strides=(S * n, n))
