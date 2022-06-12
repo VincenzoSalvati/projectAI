@@ -24,6 +24,7 @@ from tkinter import Tk, messagebox, ttk, DISABLED
 import numpy as np
 
 from bot.BotGomoku import BotGomoku
+from bot.constants import PLAYER_BLACK, PLAYER_WHITE
 from graphics.BoardGomoku import BoardGomoku, draw_board_match
 from graphics.ButtonHome import *
 from graphics.constants import *

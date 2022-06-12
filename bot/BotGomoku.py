@@ -61,7 +61,7 @@ class BotGomoku:
         self.chronometer = Chronometer()
 
     def get_stone_player(self):
-        """Return player's stone.
+        """Return player's stone
 
         Returns:
             (int): player's stone

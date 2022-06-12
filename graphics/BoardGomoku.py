@@ -26,6 +26,7 @@ import pygame
 from pygame import gfxdraw
 
 from bot.BotGomoku import BotGomoku
+from bot.constants import PLAYER_BLACK
 from graphics.constants import *
 from utility.Chronometer import Chronometer
 
