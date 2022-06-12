@@ -42,62 +42,52 @@ Implementation of Gomoku game with AI players based on adversarial search: α-β
 # How to use
 1.	Run the main.py
 
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/75745078/173242564-2a7f98c6-fbfb-462e-8f0a-845200e78dfe.png" />
+</p>
 
-
-![image](https://user-images.githubusercontent.com/75745078/173242564-2a7f98c6-fbfb-462e-8f0a-845200e78dfe.png)
- 
- 
- 
 2.	Chose the modality
 
-
-
-![image](https://user-images.githubusercontent.com/75745078/173242570-79df3e93-f49e-4613-b366-2829b1505f5e.png)
-
-
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/75745078/173242570-79df3e93-f49e-4613-b366-2829b1505f5e.png" />
+</p>
 
 3.	Let’s play
 
-
-
-![image](https://user-images.githubusercontent.com/75745078/173242600-24891413-1738-4724-96cd-cc428bcaceae.png)
- 
- 
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/75745078/173242600-24891413-1738-4724-96cd-cc428bcaceae.png" />
+</p>
  
 ## P.S.
+
 ### Player vs PC
 Initially the system asks you if you want be the first player:
 
-
-
-![image](https://user-images.githubusercontent.com/75745078/173242608-bd85ea3d-72b4-40fc-a06d-2c868c0c9a7c.png)
-
-
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/75745078/173242608-bd85ea3d-72b4-40fc-a06d-2c868c0c9a7c.png" />
+</p>
 
 After pressing yes, you are able to dispose: 1 black stone, 1 white sones and 1 black stones in this order. So, the bot, basing on his utility function, will be able to choose among:
 -	Play with black stones;
 -	Play with withe stones;
 -	Place one black stone and one white stone so that the human have to choose the own colours.
 
-
-
-![image](https://user-images.githubusercontent.com/75745078/173242611-35a697cd-9de8-4c91-881c-72520772e1fc.png)
-
-
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/75745078/173242611-35a697cd-9de8-4c91-881c-72520772e1fc.png" />
+</p>
 
 After pressing no, the bot is able to dispose: 1 black stone, 1 white sones and 1 black stones in this order. Hance, you have to choose among:
 -	Play with black stones;
 -	Play with withe stones;
 -	Place one black stone and one white stone so that the bot have to choose the own colours.
 
-
-
-![image](https://user-images.githubusercontent.com/75745078/173242620-18b7f43d-5028-40cb-8378-520a09c9ccd5.png)
-
-
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/75745078/173242620-18b7f43d-5028-40cb-8378-520a09c9ccd5.png" />
+</p>
 
 ### Player vs Player
 It a free table which could be exploit to play alone or against other people.
+
 ### PC vs PC
 It has been used to compare different heuristics.
 Its Swap 2 consist in:
