@@ -79,6 +79,7 @@ def update_home(screen, list_buttons):
             (default is False)
     """
 
+    # noinspection PyShadowingNames
     def draw_buttons(screen, list_buttons):
         for button in list_buttons:
             button.draw(screen)
@@ -122,7 +123,7 @@ def update_home(screen, list_buttons):
             break
 
 
-# noinspection PyGlobalUndefined
+# noinspection PyGlobalUndefined,PyDeprecation
 def play_player_vs_pc():
     """Match Player VS PC
 
@@ -152,6 +153,7 @@ def play_player_vs_pc():
         # Start game
         start_game(board_gomoku, PLAYER_WHITE, BotGomoku(PLAYER_BLACK))
 
+    # noinspection PyShadowingNames
     def human_places_other_2_stones():
         root.destroy()
 
@@ -228,6 +230,7 @@ def play_player_vs_pc():
         root.mainloop()
 
 
+# noinspection PyDeprecation,PyShadowingNames
 def play_player_vs_player():
     """Match Player VS Player
 
@@ -243,6 +246,7 @@ def play_player_vs_player():
     start_game(board_gomoku, PLAYER_BLACK, PLAYER_WHITE)
 
 
+# noinspection PyDeprecation,PyShadowingNames
 def play_pc_vs_pc():
     """Match PC VS PC
 
@@ -274,6 +278,7 @@ def play_pc_vs_pc():
                True)
 
 
+# noinspection PyShadowingNames
 def start_game(board_gomoku, player1, player2, is_pc_vs_pc=False):
     """Start game alternating turns between players and, eventually, producing file.csv in order have a matches' log
 
