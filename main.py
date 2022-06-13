@@ -29,6 +29,8 @@ from graphics.BoardGomoku import BoardGomoku, draw_board_match
 from graphics.ButtonHome import *
 from graphics.constants import *
 from utility.utils import write_csv_player_vs_pc, write_csv_pc_vs_pc
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 def init_home_gomoku():
