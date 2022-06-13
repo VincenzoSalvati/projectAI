@@ -122,11 +122,12 @@ def check_broken_three(lines, stone_player):
 
     # Check
     for line in lines:
-        if np.all(line == [stone_player, 0, stone_player, stone_player, 0]) or \
-                np.all(line == [stone_player, 0, 0, stone_player, stone_player]) or \
-                np.all(line == [0, stone_player, 0, stone_player, stone_player]) or \
-                np.all(line == [stone_player, stone_player, 0, 0, stone_player]) or \
+        if np.all(line == [stone_player, stone_player, 0, 0, stone_player]) or \
                 np.all(line == [stone_player, stone_player, 0, stone_player, 0]) or \
+                np.all(line == [stone_player, 0, 0, stone_player, stone_player]) or \
+                np.all(line == [stone_player, 0, stone_player, stone_player, 0]) or \
+                np.all(line == [stone_player, 0, stone_player, 0, stone_player]) or \
+                np.all(line == [0, stone_player, 0, stone_player, stone_player]) or \
                 np.all(line == [0, stone_player, stone_player, 0, stone_player]):
             count += 1
 
