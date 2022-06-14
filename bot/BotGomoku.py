@@ -47,6 +47,7 @@ class BotGomoku:
 
         Args:
             stone_player (int): player's stone
+            weights (dict[Tuple[String,Tuple[int, int]]]): heuristic's weight
         """
         # Init attributes
         self.stone_player = stone_player
