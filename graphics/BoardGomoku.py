@@ -26,8 +26,8 @@ import pygame
 from pygame import gfxdraw
 
 from bot.BotGomoku import BotGomoku
-from bot.constants import PLAYER_BLACK
-from graphics.constants import *
+from bot.constants_ai import PLAYER_BLACK
+from graphics.constants_graphics import *
 from utility.Chronometer import Chronometer
 
 new_actions_performed = False
@@ -216,13 +216,11 @@ class BoardGomoku:
 
         # Announcement
         Tk().wm_withdraw()  # Hide useless window
-        heuristic_string = ""
         if bot is not None:
             bot.has_won = True
-            heuristic_string = f"Main heuristic = {bot.main_heuristic}."
         messagebox.showinfo('Game over',
                             "The winner is: " f"{'BLACK!!' if player_stone == PLAYER_BLACK else 'WHITE!! '}"
-                            f" {'Bot has won! - ' + heuristic_string if bot is not None else 'Human has won!'}")
+                            f" {'Bot has won!' if bot.has_won else 'Human has won!'}")
 
     def tie(self):
         """Announcing the tie and stopping the match's chronometer

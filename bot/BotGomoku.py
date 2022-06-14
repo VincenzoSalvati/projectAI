@@ -20,9 +20,9 @@ from collections import namedtuple
 import numpy as np
 
 from bot.alpha_beta_pruning import alpha_beta_search
-from bot.constants import PLAYER_BLACK, PLAYER_WHITE, BOT_WEIGHTS_MAIN, BOT_WEIGHTS_2
+from bot.constants_ai import *
 from utility.Chronometer import Chronometer
-from utility.patterns import check_five_in_row, check_four_in_row, check_broken_four, check_three_in_row, \
+from bot.patterns import check_five_in_row, check_four_in_row, check_broken_four, check_three_in_row, \
     check_broken_three, check_two_in_row, check_broken_two
 
 GameState = namedtuple('GameState', 'player, utility, board, moves, branching')
@@ -42,7 +42,7 @@ class BotGomoku:
         chronometer (Chronometer): take the elapsed time of the match
     """
 
-    def __init__(self, stone_player, length_victory=5):
+    def __init__(self, stone_player, weights=BOT_WEIGHTS_MAIN):
         """Init bot
 
         Args:
@@ -53,11 +53,12 @@ class BotGomoku:
         # Init attributes
         self.stone_player = stone_player
         self.stone_opponent = PLAYER_BLACK if stone_player == PLAYER_WHITE else PLAYER_WHITE
-        self.length_victory = length_victory
+        self.length_victory = LENGTH_VICTORY
 
-        self.main_heuristic = True
+        self.main_heuristic = True  # For CSV print
         self.has_won = False
 
+        self.weights = weights
         self.chronometer = Chronometer()
 
     def get_stone_player(self):
@@ -69,15 +70,6 @@ class BotGomoku:
         return self.stone_player
 
     @staticmethod
-    def actions(state):
-        """Return list of legal moves are any square not yet taken
-
-        Returns:
-            (List[Tuple[int, int]]): list of legal moves are any square not yet taken
-        """
-        return state.moves
-
-    @staticmethod
     def utility(state):
         """Return the utility score of a particular state
 
@@ -85,6 +77,15 @@ class BotGomoku:
             (int): the utility score of a particular state
         """
         return state.utility
+
+    @staticmethod
+    def actions(state):
+        """Return list of legal moves are any square not yet taken
+
+        Returns:
+            (List[Tuple[int, int]]): list of legal moves are any square not yet taken
+        """
+        return state.moves
 
     @staticmethod
     def terminal_test(state):
@@ -337,10 +338,7 @@ class BotGomoku:
 
         # Perform utility score
         for list_of_stones in lists_of_stones:
-            if self.main_heuristic:
-                score += self.evaluate_line(list_of_stones, BOT_WEIGHTS_MAIN)
-            else:
-                score += self.evaluate_line(list_of_stones, BOT_WEIGHTS_2)
+            score += self.evaluate_line(list_of_stones, self.weights)
 
         return score
 

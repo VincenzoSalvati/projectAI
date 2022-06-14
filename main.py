@@ -19,17 +19,18 @@ import os
 import random
 import sys
 import threading
+import warnings
 from tkinter import Tk, messagebox, ttk, DISABLED
 
 import numpy as np
 
 from bot.BotGomoku import BotGomoku
-from bot.constants import PLAYER_BLACK, PLAYER_WHITE
+from bot.constants_ai import *
 from graphics.BoardGomoku import BoardGomoku, draw_board_match
 from graphics.ButtonHome import *
-from graphics.constants import *
+from graphics.constants_graphics import *
 from utility.utils import write_csv_player_vs_pc, write_csv_pc_vs_pc
-import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
@@ -262,7 +263,8 @@ def play_pc_vs_pc():
 
     # Nullify initial advantage between bots
     first_bot = BotGomoku(random.choice((PLAYER_WHITE, PLAYER_BLACK)))
-    second_bot = BotGomoku(PLAYER_WHITE if first_bot.get_stone_player() == PLAYER_BLACK else PLAYER_BLACK)
+    second_bot = BotGomoku(PLAYER_WHITE if first_bot.get_stone_player() == PLAYER_BLACK else PLAYER_BLACK,
+                           BOT_WEIGHTS_2)
     second_bot.main_heuristic = False
     # First black stone randomly placed
     board_gomoku.make_move(BotGomoku(PLAYER_BLACK))
