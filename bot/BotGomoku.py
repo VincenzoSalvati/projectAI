@@ -86,14 +86,15 @@ class BotGomoku:
         """
         return state.moves
 
-    @staticmethod
-    def terminal_test(state):
+    def terminal_test(self, state):
         """Returns if it is achieved the end of the depth search
 
         Returns:
             (bool): is achieved the end of the depth search
         """
-        return len(state.moves) == 0 or state.branching == 0
+        return len(state.moves) == 0 or \
+               state.branching == 0 or \
+               state.utility >= self.weights["FiveInRow"][0] * (4 / 5)
 
     @staticmethod
     def player(state):
