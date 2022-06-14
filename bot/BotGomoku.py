@@ -21,9 +21,9 @@ import numpy as np
 
 from bot.alpha_beta_pruning import alpha_beta_search
 from bot.constants_ai import *
-from utility.Chronometer import Chronometer
 from bot.patterns import check_five_in_row, check_four_in_row, check_broken_four, check_three_in_row, \
     check_broken_three, check_two_in_row, check_broken_two
+from utility.Chronometer import Chronometer
 
 GameState = namedtuple('GameState', 'player, utility, board, moves, branching')
 
@@ -47,8 +47,6 @@ class BotGomoku:
 
         Args:
             stone_player (int): player's stone
-            length_victory (int): number of consecutively stones necessary to win
-                (default is 5)
         """
         # Init attributes
         self.stone_player = stone_player

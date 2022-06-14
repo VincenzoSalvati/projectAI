@@ -9,10 +9,10 @@ Group:
 Salvati       Vincenzo    0622701550      v.salvati10@studenti.unisa.it
 Mansi         Paolo       0622701542      p.mansi5@studenti.unisa.it
 
-@file constants_graphics.py
+@file constants_ai.py
 
 
-PURPOSE OF THE FILE: bot constants.
+PURPOSE OF THE FILE: ai constants.
 """
 
 PLAYER_BLACK = 1
