@@ -34,14 +34,14 @@ BOT_WEIGHTS_MAIN = {
 }
 
 BOT_WEIGHTS_2 = {
-    "FiveInRow": (20, 20),
+    "FiveInRow": (20, 19),
 
-    "FourInRow": (9, 7),
-    "BrokenFour": (9, 7),
+    "FourInRow": (12, 10),
+    "BrokenFour": (12, 10),
 
-    "ThreeInRow": (2, 5),
-    "BrokenThree": (2, 5),
+    "ThreeInRow": (3, 5),
+    "BrokenThree": (3, 5),
 
-    "TwoInRow": (1, .5),
-    "BrokenTwo": (1, .5)
+    "TwoInRow": (2.5, 1),
+    "BrokenTwo": (2.5, 1)
 }
