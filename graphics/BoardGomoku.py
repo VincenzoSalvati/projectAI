@@ -16,13 +16,14 @@ PURPOSE OF THE FILE: set board Gomoku and deal with the match.
 """
 
 import itertools
-import numpy as np
-import pygame
 import random
 import sys
-from pygame import gfxdraw
 from tkinter import *
 from tkinter import messagebox
+
+import numpy as np
+import pygame
+from pygame import gfxdraw
 
 from bot.BotGomoku import BotGomoku
 from bot.constants_ai import PLAYER_BLACK
@@ -39,7 +40,7 @@ def make_grid(size):
         size (int): size of grid
 
     Returns:
-        (Tuple[List[Tuple[float, float]]]): start and end points for gridlines
+        Tuple[List[Tuple[float, float]]]: start and end points for gridlines
     """
     start_points, end_points = [], []
     # Vertical start points (constant y)
@@ -70,7 +71,7 @@ def col_row_from(x, y, size):
         size (int): size of grid
 
     Returns:
-        (Tuple[int, int]): column and row numbers of intersection
+        Tuple[int, int]: column and row numbers of intersection
     """
     inc = (BOARD_DIMENSION - 2 * BOARD_BORDER) / (size - 1)
     x_dist = x - BOARD_BORDER
@@ -89,7 +90,7 @@ def x_y_from(col, row, size):
         size (int): size of grid
 
     Returns:
-        (Tuple[float, float]): x,y coordinates of intersection
+        Tuple[float, float]: x,y coordinates of intersection
     """
     inc = (BOARD_DIMENSION - 2 * BOARD_BORDER) / (size - 1)
     x = int(BOARD_BORDER + col * inc)
@@ -249,7 +250,7 @@ class BoardGomoku:
             row (int): row number (vertical position)
 
         Returns:
-            (bool): coordinates do not create conflicts
+            bool: coordinates do not create conflicts
         """
         if col < 0 or col >= self.size:
             return False
@@ -394,7 +395,6 @@ class BoardGomoku:
         Args:
             player (int or BotGomoku): player who takes part into games
         """
-
         global new_actions_performed
 
         # Bot

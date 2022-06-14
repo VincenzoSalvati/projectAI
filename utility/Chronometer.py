@@ -51,7 +51,7 @@ class Chronometer:
         """Return execution time
 
         Returns:
-            (float): execution time in milliseconds
+            float: execution time in milliseconds
         """
         return self.end_time - self.start_time
 
@@ -65,7 +65,7 @@ class Chronometer:
         """Return the chronometer's log
 
         Returns:
-            (List[float]): log list
+            List[float]: log list
         """
         return self.log
 
@@ -80,7 +80,7 @@ class Chronometer:
         """Return mean of the chronometer's log
 
         Returns:
-            (float): mean log in milliseconds
+            float: mean log in milliseconds
         """
         return sum(self.get_log()) / len(self.get_log())
 
@@ -89,6 +89,6 @@ class Chronometer:
         """Return system time
 
         Returns:
-            (float): system time in milliseconds
+            float: system time in milliseconds
         """
         return round(time.time() * 1000)

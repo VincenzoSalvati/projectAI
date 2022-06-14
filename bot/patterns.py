@@ -26,7 +26,7 @@ def check_five_in_row(lines, stone_player):
         stone_player (int) : player's stone to be checked
 
     Returns:
-        (int): number of matched five in row pattern
+        int: number of matched five in row pattern
     """
     # Init parameters
     count = 0
@@ -47,7 +47,7 @@ def check_four_in_row(lines, stone_player):
         stone_player (int) : player's stone to be checked
 
     Returns:
-        (int): number of matched four in row pattern
+        int: number of matched four in row pattern
     """
     # Init parameters
     count = 0
@@ -69,7 +69,7 @@ def check_broken_four(lines, stone_player):
         stone_player (int) : player's stone to be checked
 
     Returns:
-        (int): number of matched broken four pattern
+        int: number of matched broken four pattern
     """
     # Init parameters
     count = 0
@@ -92,7 +92,7 @@ def check_three_in_row(lines, stone_player):
         stone_player (int) : player's stone to be checked
 
     Returns:
-        (int): number of matched three in row pattern
+        int: number of matched three in row pattern
     """
     # Init parameters
     count = 0
@@ -115,7 +115,7 @@ def check_broken_three(lines, stone_player):
         stone_player (int) : player's stone to be checked
 
     Returns:
-        (int): number of matched broken three pattern
+        int: number of matched broken three pattern
     """
     # Init parameters
     count = 0
@@ -142,7 +142,7 @@ def check_two_in_row(lines, stone_player):
         stone_player (int) : player's stone to be checked
 
     Returns:
-        (int): number of matched two in row pattern
+        int: number of matched two in row pattern
     """
     # Init parameters
     count = 0
@@ -166,7 +166,7 @@ def check_broken_two(lines, stone_player):
         stone_player (int) : player's stone to be checked
 
     Returns:
-        (int): number of matched broken two pattern
+        int: number of matched broken two pattern
     """
     # Init parameters
     count = 0

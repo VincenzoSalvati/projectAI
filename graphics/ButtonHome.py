@@ -23,12 +23,12 @@ class ButtonHome:
 
     Attributes:
         top_rect (obj python): top rectangle
-        top_color (string): color of top rectangle
+        top_color (String): color of top rectangle
 
         bottom_rect (obj python): bottom rectangle
-        bottom_color (string): color of bottom rectangle
+        bottom_color (String): color of bottom rectangle
 
-        text (string): button's text
+        text (String): button's text
         text_surf (obj pygame): text' font
         text_rect (obj pygame): text rectangle
 
@@ -44,7 +44,7 @@ class ButtonHome:
             position (Tuple[int, int]): button's position
             dimension (Tuple[int, int]): button's dimension
 
-            text (string): button's text
+            text (String): button's text
             gui_font (obj pygame): text' font
 
             elevation (float): button's elevation

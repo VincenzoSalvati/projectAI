@@ -45,3 +45,5 @@ BOT_WEIGHTS_2 = {
     "TwoInRow": (2.5, 1),
     "BrokenTwo": (2.5, 1)
 }
+
+WEIGHT_TERMINAL_STATE = 0.8

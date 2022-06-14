@@ -15,8 +15,9 @@ Mansi         Paolo       0622701542      p.mansi5@studenti.unisa.it
 PURPOSE OF THE FILE: bot intelligence.
 """
 
-import numpy as np
 from collections import namedtuple
+
+import numpy as np
 
 from bot.alpha_beta_pruning import alpha_beta_search
 from bot.constants_ai import *
@@ -46,7 +47,7 @@ class BotGomoku:
 
         Args:
             stone_player (int): player's stone
-            weights (dict[Tuple[String,Tuple[int, int]]]): heuristic's weight
+            weights (dict[str, Tuple[String,Tuple[int, int]]]): heuristic's weight
         """
         # Init attributes
         self.stone_player = stone_player
@@ -63,7 +64,7 @@ class BotGomoku:
         """Return player's stone
 
         Returns:
-            (int): player's stone
+            int: player's stone
         """
         return self.stone_player
 
@@ -72,7 +73,7 @@ class BotGomoku:
         """Return the utility score of a particular state
 
         Returns:
-            (int): the utility score of a particular state
+            int: the utility score of a particular state
         """
         return state.utility
 
@@ -81,7 +82,7 @@ class BotGomoku:
         """Return list of legal moves are any square not yet taken
 
         Returns:
-            (List[Tuple[int, int]]): list of legal moves are any square not yet taken
+            List[Tuple[int, int]]: list of legal moves are any square not yet taken
         """
         return state.moves
 
@@ -89,18 +90,18 @@ class BotGomoku:
         """Returns if it is achieved the end of the depth search
 
         Returns:
-            (bool): is achieved the end of the depth search
+            bool: is achieved the end of the depth search
         """
         return len(state.moves) == 0 or \
                state.branching == 0 or \
-               state.utility >= self.weights["FiveInRow"][0] * (4 / 5)
+               state.utility >= self.weights["FiveInRow"][0] * WEIGHT_TERMINAL_STATE
 
     @staticmethod
     def player(state):
         """Return the player of a particular state
 
         Returns:
-            (int): player of a particular state
+            int: player of a particular state
         """
         return state.player
 
@@ -112,7 +113,7 @@ class BotGomoku:
             board (numpy.array[int, int]): representative matrix of Gomoku board
 
         Return:
-            (List(Tuple[int, int])): list of useful moves which can be taken into account by the bot
+            List[Tuple[int, int]]: list of useful moves which can be taken into account by the bot
         """
 
         def filtering(coordinates, neighbourhood=3):
@@ -137,7 +138,7 @@ class BotGomoku:
             move (Tuple[int, int]): chosen move by specific player
 
         Return:
-            (GameState): new state of the game after a move
+            GameState: new state of the game after a move
         """
         # Check move
         if move not in state.moves:
@@ -166,7 +167,7 @@ class BotGomoku:
             array (array[int]): array to be analyzed
 
         Return:
-            (List[list[array[int], array[int], int, int]]): extracted lines and how many six in row has been found
+            List[List[array[int], array[int], int, int]]: extracted lines and how many six in row has been found
         """
         # Init parameters
         my_lines = []
@@ -257,10 +258,10 @@ class BotGomoku:
 
         Args:
             array (array[int]): array to be analyzed
-            weights (dict[string, Tuple[int, int]]): dictionary of weights
+            weights (Dict[String, Tuple[int, int]]): dictionary of weights
 
         Returns:
-            (int): array's score
+            int: array's score
         """
         # Init parameters
         functions = [check_five_in_row,
@@ -287,7 +288,7 @@ class BotGomoku:
             board (numpy.array[int, int]): representative matrix of Gomoku board
 
         Returns:
-            (List[List[int]]): lists of stones extracted from a board
+            List[List[int]]: lists of stones extracted from a board
         """
         # Init parameters
         cols = []
@@ -327,7 +328,7 @@ class BotGomoku:
             board (numpy.array[int, int]): representative matrix of Gomoku board
 
         Returns:
-            (int): utility score of a specific board
+            int: utility score of a specific board
         """
         # Init parameters
         score = 0
@@ -349,7 +350,7 @@ class BotGomoku:
             branching (int): number of level under a specific state
 
         Returns:
-            (Tuple[int, int]): bot player's move
+            Tuple[int, int]: bot player's move
         """
         # No moves --> tie
         if np.count_nonzero(board) == 225:
