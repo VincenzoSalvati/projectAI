@@ -218,7 +218,7 @@ class BoardGomoku:
             bot.has_won = True
         messagebox.showinfo('Game over',
                             "The winner is: " f"{'BLACK!!' if player_stone == PLAYER_BLACK else 'WHITE!! '}"
-                            f" {'Bot has won!' if bot.has_won else 'Human has won!'}")
+                            f" {'Bot has won!' if bot is not None else 'Human has won!'}")
 
     def tie(self):
         """Announcing the tie and stopping the match's chronometer
