@@ -125,17 +125,15 @@ class BoardGomoku:
         chronometer_match (Chronometer): take the elapsed time of the match
     """
 
-    def __init__(self, size, length_victory=5):
+    def __init__(self, size):
         """Init board
 
         Args:
             size (int): size board along one dimension
-            length_victory (int): number of consecutively stones necessary to win
-                (default is 5)
         """
         # Init attributes
         self.size = size
-        self.length_victory = length_victory
+        self.length_victory = LENGTH_VICTORY
 
         self.board = np.zeros((size, size))
 
