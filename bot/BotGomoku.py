@@ -15,9 +15,8 @@ Mansi         Paolo       0622701542      p.mansi5@studenti.unisa.it
 PURPOSE OF THE FILE: bot intelligence.
 """
 
-from collections import namedtuple
-
 import numpy as np
+from collections import namedtuple
 
 from bot.alpha_beta_pruning import alpha_beta_search
 from bot.constants_ai import *

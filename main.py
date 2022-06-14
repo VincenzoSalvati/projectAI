@@ -15,14 +15,13 @@ Mansi         Paolo       0622701542      p.mansi5@studenti.unisa.it
 PURPOSE OF THE FILE: running game.
 """
 
+import numpy as np
 import os
 import random
 import sys
 import threading
 import warnings
 from tkinter import Tk, messagebox, ttk, DISABLED
-
-import numpy as np
 
 from bot.BotGomoku import BotGomoku
 from bot.constants_ai import *
