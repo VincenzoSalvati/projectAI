@@ -39,7 +39,7 @@ Implementation of Gomoku game with AI players based on adversarial search: α-β
 - _utility_: contains the useful scripts;
 - _main.py_: script to start the game.
 
-# How to use
+# How to run
 1.	Run the main.py
 
 <p align="center">
