@@ -49,7 +49,6 @@ The developed code is divided in the following folders manner:
     -	_utils.py_ that contains csv function in order to make the matches’ log
 -	The class _main.py_ which allow to start the match initializing both the home and its modalities
 
-
 # How to run
 1.	Run the main.py
 
