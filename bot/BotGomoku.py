@@ -159,6 +159,54 @@ class BotGomoku:
                          moves=moves,
                          branching=branching)
 
+    def masking_array(self, array):
+        """Return masked array in order to avoid considering over 5 stones consecutively
+
+        Args:
+            array (array[int]): array to be masked
+
+        Return:
+            array[int]: masked array
+        """
+        # Init parameters
+        array = np.array(array)
+        array_next_different = np.r_[True, array[:-1] != array[1:], True]
+        occurrences = np.diff(np.flatnonzero(array_next_different))
+        values_occurrences = array[array_next_different[:-1]]
+        indexes_occurrences = np.cumsum(occurrences)
+
+        # Masking internal holes
+        for i in range(len(values_occurrences) - 2):
+            if occurrences[i + 1] == 1:
+                if (values_occurrences[i] == self.stone_player and
+                    values_occurrences[i + 1] == 0 and
+                    values_occurrences[i + 2] == self.stone_player) \
+                        or \
+                        (values_occurrences[i] == self.stone_opponent and
+                         values_occurrences[i + 1] == 0 and
+                         values_occurrences[i + 2] == self.stone_opponent):
+                    if sum(occurrences[i:i + 3]) >= 6:
+                        array[indexes_occurrences[i]] = MASKING_ELEMENT
+
+        # Masking SIX Combinations
+        indexes = list(np.where(occurrences >= 6)[0])
+        for i in indexes:
+            if values_occurrences[i] != 0:
+                start = indexes_occurrences[i - 1]
+                stop = indexes_occurrences[i]
+                array[start:stop + 1] = MASKING_ELEMENT
+                try:
+                    if array[stop + 1] == 0:
+                        array[stop + 1] = MASKING_ELEMENT
+                except IndexError:
+                    pass
+                try:
+                    if array[start - 1] == 0:
+                        array[start - 1] = MASKING_ELEMENT
+                except IndexError:
+                    pass
+        return array
+
     # noinspection DuplicatedCode
     def array_analysis(self, array):
         """Return extracted lines (stride of 1) and how many six in row has been found into an array
@@ -170,88 +218,51 @@ class BotGomoku:
             List[List[array[int], array[int], int, int]]: extracted lines and how many six in row has been found
         """
         # Init parameters
+        array = self.masking_array(array)
         my_lines = []
         opp_lines = []
-
-        num_six_in_row_my_color = 0
-        num_six_in_row_opp_color = 0
 
         for start_index in range(0, len(array) - self.length_victory + 1):  # stride 1 until to (length - 5)
             line = []
             count_my_color = 0
             count_opp_color = 0
 
-            count_six_in_row_my_color = 0
-            count_six_in_row_opp_color = 0
-
             valid_line = True
-            for end_index in range(0, self.length_victory + 1):  # 6 place to check from start_index
-                # Stop if is considered an index out of bound
-                if start_index + end_index >= len(array):
-                    break
+            for end_index in range(0, self.length_victory):  # check next 5 starting from start_index
 
                 # My color
                 if array[start_index + end_index] == self.stone_player:
-                    if end_index != 5:  # not to consider "my_lines" because this value is for "num_six_in_row_my_color"
-                        # my_lines
-                        if count_opp_color != 0:
-                            valid_line = False
-                            break  # not possible both to compose num_six_in_row_my_color and my_lines
-                        else:
-                            count_my_color += 1
-                            line.append(array[start_index + end_index])
-
-                    #  num_six_in_row_my_color
-                    if count_six_in_row_opp_color != 0:
-                        if not valid_line:
-                            break  # not possible both to compose num_six_in_row_my_color and my_lines
+                    if count_opp_color != 0:
+                        valid_line = False
+                        break
                     else:
-                        count_six_in_row_my_color += 1
+                        count_my_color += 1
+                        line.append(array[start_index + end_index])
 
                 # Opponent color
                 elif array[start_index + end_index] == self.stone_opponent:
-                    if end_index != 5:  # not to consider "opp_lines" because this value is for "num_six_in_row_opp_color"
-                        # opp_lines
-                        if count_my_color != 0:
-                            valid_line = False
-                            break  # not possible both to compose num_six_in_row_my_color and opp_lines
-                        else:
-                            count_opp_color += 1
-                            line.append(array[start_index + end_index])
-
-                    # num_six_in_row_opp_color
-                    if count_six_in_row_my_color != 0:
-                        if not valid_line:
-                            break  # not possible both to compose num_six_in_row_my_color and opp_lines
+                    if count_my_color != 0:
+                        valid_line = False
+                        break
                     else:
-                        count_six_in_row_opp_color += 1
+                        count_opp_color += 1
+                        line.append(array[start_index + end_index])
 
                 # My color and opponent color
                 else:
-                    # my_lines and opp_lines
-                    if end_index != 5:
+                    if array[start_index + end_index] == 0:
                         line.append(0)
-                    # num_six_in_row_my_color and num_six_in_row_opp_color
-                    count_six_in_row_my_color = 0
-                    count_six_in_row_opp_color = 0
+                    else:  # array[start_index + end_index] == MASKING_ELEMENT
+                        valid_line = False
+                        break
 
             if valid_line:
-                # my_lines and opp_lines
                 if count_my_color >= 2:
                     my_lines.append(line)
                 elif count_opp_color >= 2:
                     opp_lines.append(line)
-                # num_six_in_row_my_color and num_six_in_row_opp_color
-                if count_six_in_row_my_color == 6:
-                    num_six_in_row_my_color += 1
-                if count_six_in_row_opp_color == 6:
-                    num_six_in_row_opp_color += 1
 
-        # End loop, check six_in_row
-        num_six_in_row_my_color = -1 if num_six_in_row_my_color > 0 else -1
-        num_six_in_row_opp_color = -1 if num_six_in_row_opp_color > 0 else -1
-
-        return my_lines, opp_lines, num_six_in_row_my_color, num_six_in_row_opp_color
+        return my_lines, opp_lines
 
     def evaluate_line(self, array, weights):
         """Return array's score
@@ -269,12 +280,11 @@ class BotGomoku:
                      check_three_in_row, check_broken_three,
                      check_two_in_row, check_broken_two]
 
-        # Extract lines and six_in_row's counters
-        my_lines, opp_lines, num_six_in_row_my_color, count_six_in_row_opp_color = self.array_analysis(array)
+        # Extract lines
+        my_lines, opp_lines = self.array_analysis(array)
 
         # Perform score
-        score = num_six_in_row_my_color * (-weights["FiveInRow"][0] * (num_six_in_row_my_color + 1)) - \
-                count_six_in_row_opp_color * (-weights["FiveInRow"][1] * (count_six_in_row_opp_color + 1))
+        score = 0
         for function, value in zip(functions, weights.values()):
             score += function(my_lines, self.stone_player) * value[0] - \
                      function(opp_lines, self.stone_opponent) * value[1]
@@ -308,8 +318,8 @@ class BotGomoku:
             for r in range(0, board.shape[1]):
                 row.append(board[c][r])
                 col.append(board[r][c])
-            cols.append(col)
-            rows.append(row)
+            cols.append(np.array(col))
+            rows.append(np.array(row))
 
             # Diagonals
             if c < board.shape[0] - self.length_victory + 1:

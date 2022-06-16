@@ -79,6 +79,7 @@ def update_home(screen, list_buttons):
     Args:
         screen (obj pygame): home's window
         list_buttons (List[Button]): list of buttons to be drawn and on which to listen to the click event
+            (default is False)
     """
 
     # noinspection PyShadowingNames
@@ -89,6 +90,7 @@ def update_home(screen, list_buttons):
     # Init parameters
     clock = pygame.time.Clock()
     stop_drawing_button = False
+
     while True:
         for event in pygame.event.get():
             # Exit
