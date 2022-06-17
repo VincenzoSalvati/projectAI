@@ -88,7 +88,7 @@ After pressing no, the bot is able to dispose: 1 black stone, 1 white stone and 
 </p>
 
 ## Player VS Player
-It’s a free table which could be exploited to play alone or against other people.
+It is a free table which could be exploited to play alone or against other people.
 
 ## PC VS PC
 It has been used to compare different heuristics.
