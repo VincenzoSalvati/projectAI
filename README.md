@@ -64,7 +64,7 @@ Initially the system asks if the player desires to be the first one to place the
   <img src="https://user-images.githubusercontent.com/75745078/174127184-ccd1cb80-2e4b-459b-8db0-cd072c738a9e.png" />
 </p>
 
-After pressing yes, the player are able to place: 1 black stone, 1 white stone and 1 black stones in this order. So, the bot, basing on his utility function, will be able to choose among:
+After pressing yes, the player are able to place: one black stone, one white stone and one black stones in this order. So, the bot, basing on his utility function, will be able to choose among:
 -	Playing with black stones
 -	Playing with withe stones
 -   Placing one black stone and one white stone so that the player has to choose its own colour.
@@ -74,7 +74,7 @@ After pressing yes, the player are able to place: 1 black stone, 1 white stone a
   <img src="https://user-images.githubusercontent.com/75745078/173242611-35a697cd-9de8-4c91-881c-72520772e1fc.png" />
 </p>
 
-After pressing no, the bot is able to place: 1 black stone, 1 white stone and 1 black stone in this order. Hence, the player can choose among the followings:
+After pressing no, the bot is able to place: one black stone, one white stone and one black stone in this order. Hence, the player can choose among the followings:
 -	Playing with black stones
 -	Playing with withe stones
 -	Placing one black stone and one white stone so that the bot has to choose its own colour.
