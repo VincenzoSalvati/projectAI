@@ -51,7 +51,7 @@ The developed code is divided in the following folders/classes:
 
 # How to run
 1.	Run the main.py
-2.	2.	From the Main page, use the buttons to chose the modality
+2.	From the Main page, use the buttons to chose the modality
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/75745078/173242570-79df3e93-f49e-4613-b366-2829b1505f5e.png" />
