@@ -62,7 +62,7 @@ The developed code is divided in the following folders/classes:
   <img src="https://user-images.githubusercontent.com/75745078/173242570-79df3e93-f49e-4613-b366-2829b1505f5e.png" />
 </p>
  
-## Player vs PC
+## Player VS PC
 Initially the system asks if you want to be the first player:
 
 <p align="center">
@@ -87,10 +87,10 @@ After pressing no, the bot is able to dispose: 1 black stone, 1 white stone and 
   <img src="https://user-images.githubusercontent.com/75745078/173242620-18b7f43d-5028-40cb-8378-520a09c9ccd5.png" />
 </p>
 
-## Player vs Player
+## Player VS Player
 It’s a free table which could be exploited to play alone or against other people.
 
-## PC vs PC
+## PC VS PC
 It has been used to compare different heuristics.
 Its Swap 2 consist in:
 1.	Choosing randomly whose heuristics starts the match
