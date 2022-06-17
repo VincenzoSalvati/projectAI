@@ -33,21 +33,21 @@ Implementation of Gomoku game with AI players based on adversarial search: α-β
 |   |-- main.py
 ```
 
-The developed code is divided in the following folders manner:
-- The “_bot_” folder contains all the classes related to the AI as well as the heuristic and α-β pruning search. In particular, it contains:
-    - _alpha_beta_pruning.py_ for implementing α-β pruning algorithm
-    - _BotGomoku.py_ for implementing the AI
-    - _constants_ai.py_ that contains some constants used for the AI
-    - _patterns.py_ that contains all patterns considered by the AI
--	The “_graphic_” folder contains all the classes related to the bare board of the game as well as the update of the GUI. In particular, it contains: 
-    -	_BoardGomoku.py_ for implementing the board of the game
-    -	_ButtonHome.py_ for displaying buttons in the home page
-    -	_constants_graphics.py_ that contains some constants used for the board internal structure
--	The “_data_” folder contains wav file to reproduce audio effect
--	The “_utility_” folder contains all the classes related to the AI and the board. In particular, it contains:
-    -	_Chronometer.py_ for implementing the chronometer in order to take in consideration both the elapsed time for each AI move and the match’s total elapsed time
-    -	_utils.py_ that contains csv function in order to make the matches’ log
--	The class _main.py_ which allow to start the match initializing both the home and its modalities
+The developed code is divided in the following folders/classes:
+- The “bot” folder contains all the classes related to the AI as well as the heuristic and α-β pruning search. In particular, it contains:
+    - alpha_beta_pruning.py for implementing α-β pruning algorithm
+    - BotGomoku.py for implementing the AI
+    - constants_ai.py that contains some constants used for the AI
+    - patterns.py that contains all patterns considered by the AI
+-	The “graphic” folder contains all the classes related to the board of the game as well as the update of the GUI. In particular, it contains: 
+    -	BoardGomoku.py for implementing the board of the game
+    -	ButtonHome.py for displaying and show animations of home page’s buttons
+    -	constants_graphics.py that contains some constants used for the board internal structure
+-	The “data” folder contains wav file to reproduce audio effect
+-	The “utility” folder contains all the classes related to the AI and the board. In particular, it contains:
+    -	Chronometer.py for implementing the chronometer in order to take in consideration both the elapsed time for each AI move and the match’s total elapsed time
+    -	utils.py that contains csv function in order to make the matches’ log
+-	The class main.py which allow to start the match initializing both the home and its modalities.
 
 # How to run
 1.	Run the main.py
