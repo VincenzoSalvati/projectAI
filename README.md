@@ -51,47 +51,45 @@ The developed code is divided in the following folders/classes:
 
 # How to run
 1.	Run the main.py
-
-<p align="center">
-  <img src="https://user-images.githubusercontent.com/75745078/173242564-2a7f98c6-fbfb-462e-8f0a-845200e78dfe.png" />
-</p>
-
-2.	Chose the modality
+2.	2.	From the Main page, use the buttons to chose the modality
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/75745078/173242570-79df3e93-f49e-4613-b366-2829b1505f5e.png" />
 </p>
  
 ## Player VS PC
-Initially the system asks if you want to be the first player:
+Initially the system asks if the player desires to be the first one to place the stones:
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/75745078/174127184-ccd1cb80-2e4b-459b-8db0-cd072c738a9e.png" />
 </p>
 
-After pressing yes, you are able to dispose: 1 black stone, 1 white stone and 1 black stones in this order. So, the bot, basing on his utility function, will be able to choose among:
--	Play with black stones
--	Play with withe stones
--	Place one black stone and one white stone so that the player has to choose the own colours.
+After pressing yes, you are able to place: 1 black stone, 1 white stone and 1 black stones in this order. So, the bot, basing on his utility function, will be able to choose among:
+-	Playing with black stones
+-	Playing with withe stones
+-   Placing one black stone and one white stone so that the player has to choose its own colour.
+
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/75745078/173242611-35a697cd-9de8-4c91-881c-72520772e1fc.png" />
 </p>
 
-After pressing no, the bot is able to dispose: 1 black stone, 1 white stone and 1 black stone in this order. Hence, the player can choose among the followings:
--	Play with black stones
--	Play with withe stones
--	Place one black stone and one white stone so that the bot have to choose the own colours.
+After pressing no, the bot is able to place: 1 black stone, 1 white stone and 1 black stone in this order. Hence, the player can choose among the followings:
+-	Playing with black stones
+-	Playing with withe stones
+-	Placing one black stone and one white stone so that the bot has to choose its own colour.
+
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/75745078/173242620-18b7f43d-5028-40cb-8378-520a09c9ccd5.png" />
 </p>
 
 ## Player VS Player
-It is a free table which could be exploited to play alone or against other people.
+It is a free table which can be used by two players utilizing the same computer.
 
 ## PC VS PC
 It has been used to compare different heuristics.
 Its Swap 2 consist in:
 1.	Choosing randomly whose heuristics starts the match
 2.	Random first move for each player.
+
