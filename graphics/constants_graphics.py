@@ -1,5 +1,5 @@
 """
-Course: Artificial Intelligence 2021/2022
+Course: Agenti Intelligenti 2021/2022
 
 Lecturer:
 Marcelli      Angelo      amarcelli@unisa.it
